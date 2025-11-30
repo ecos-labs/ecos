@@ -1,0 +1,4 @@
+dbt-athena~=1.9
+dbt-core~=1.9
+sqlfluff~=3.4
+sqlfluff-templater-dbt~=3.4

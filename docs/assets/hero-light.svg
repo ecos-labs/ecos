@@ -1,0 +1,64 @@
+<svg width="1280" height="400" viewBox="0 0 1280 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <!-- Title gradient -->
+    <linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="25%" style="stop-color:#0d9488;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Underline gradient -->
+    <linearGradient id="underlineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="33%" style="stop-color:#14b8a6;stop-opacity:1" />
+      <stop offset="66%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Background gradient -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="20%" style="stop-color:#d1fae5;stop-opacity:0.15" />
+      <stop offset="40%" style="stop-color:#ccfbf1;stop-opacity:0.1" />
+      <stop offset="60%" style="stop-color:#e0f2fe;stop-opacity:0.1" />
+      <stop offset="80%" style="stop-color:#dbeafe;stop-opacity:0.15" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Decorative blob filters -->
+    <filter id="blur">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="40" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="400" fill="url(#bgGradient)" />
+
+  <!-- Decorative blobs -->
+  <circle cx="100" cy="80" r="120" fill="#34d399" opacity="0.15" filter="url(#blur)" />
+  <circle cx="1180" cy="320" r="120" fill="#38bdf8" opacity="0.15" filter="url(#blur)" />
+  <circle cx="640" cy="200" r="100" fill="#2dd4bf" opacity="0.1" filter="url(#blur)" />
+
+  <!-- Main content group -->
+  <g text-rendering="geometricPrecision" shape-rendering="crispEdges">
+    <!-- Title: ecos -->
+    <text x="640" y="140" font-family="'Segoe UI', system-ui, sans-serif"
+          font-size="120" font-weight="700" text-anchor="middle" fill="url(#titleGradient)"
+          letter-spacing="-2" text-rendering="optimizeLegibility">ecos</text>
+
+    <!-- Tagline: Open FinOps Data Stack -->
+    <text x="640" y="220" font-family="'Segoe UI', system-ui, sans-serif"
+          font-size="38" font-weight="600" text-anchor="middle" fill="rgba(0, 0, 0, 0.85)"
+          letter-spacing="1" text-rendering="optimizeLegibility">Open FinOps Data Stack</text>
+
+    <!-- Underline -->
+    <rect x="420" y="230" width="440" height="4" rx="2" fill="url(#underlineGradient)" />
+
+    <!-- Hashtags -->
+    <text x="640" y="290" font-family="'Segoe UI', system-ui, sans-serif"
+          font-size="22" font-weight="400" text-anchor="middle" fill="rgba(0, 0, 0, 0.5)"
+          letter-spacing="2" text-rendering="optimizeLegibility">#efficiency #cloud #operations #stack</text>
+  </g>
+</svg>
