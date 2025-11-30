@@ -1,0 +1,70 @@
+# Datasource package release configuration for DBT selective releases
+metadata:
+  description: "Datasource package release configuration"
+  base_path: "code/dbt"
+
+# Common assets that are always included in every datasource package
+common_assets:
+  - "macros"
+  - "seeds"
+  - "snapshots"
+  - "tests"
+  - "packages.yml"
+  - "dbt_project.yml"
+
+# Individual datasource package definitions
+datasources:
+  aws_cur:
+    name: "AWS Cost and Usage Reports"
+    package_name: "aws-cur"
+    version: "0.1.0"
+    description: "DBT models for AWS Cost and Usage Reports across bronze, silver, and gold layers"
+    model_paths:
+      - "models/1_bronze/aws/cur"
+      - "models/2_silver/aws/cur"
+      - "models/3_gold/aws/cur"
+
+  aws_focus:
+    name: "AWS FOCUS Format"
+    package_name: "aws-focus"
+    version: "0.1.0"
+    description: "DBT models for AWS FOCUS billing format"
+    model_paths:
+      - "models/1_bronze/aws/focus"
+
+  # aws_cost_optimization:
+  #   name: "AWS Cost Optimization"
+  #   package_name: "aws-cost-optimization"
+  #   version: "0.3.1"
+  #   description: "Advanced cost optimization models combining CUR and FOCUS data"
+  #   model_paths:
+  #     - "models/1_bronze/aws/cost_optimization"
+  #     - "models/2_silver/aws/cost_optimization"
+  #     - "models/3_gold/aws/cost_optimization"
+
+  # azure_cost_management:
+  #   name: "Azure Cost Management"
+  #   package_name: "azure-cost-management"
+  #   version: "1.0.2"
+  #   description: "Azure cost management and billing analysis models"
+  #   model_paths:
+  #     - "models/1_bronze/azure/cost_management"
+  #     - "models/2_silver/azure/cost_management"
+  #     - "models/3_gold/azure/cost_management"
+
+  # gcp_billing_export:
+  #   name: "GCP Billing Export"
+  #   package_name: "gcp-billing-export"
+  #   version: "0.8.1"
+  #   description: "Google Cloud Platform billing export models"
+  #   model_paths:
+  #     - "models/1_bronze/gcp/billing_export"
+  #     - "models/2_silver/gcp/billing_export"
+  #     - "models/3_gold/gcp/billing_export"
+
+# Release configuration and conventions
+release_config:
+  tag_format: "{package_name}-v{version}"
+  archive_format: "{package_name}-{version}.tar.gz"
+  distribution_directory: "dist"
+  create_github_release: true

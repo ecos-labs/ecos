@@ -1,0 +1,50 @@
+name: ecos datasource Release
+
+on:
+  push:
+    tags:
+      - "ds/*/v*.*.*"
+
+jobs:
+  release:
+    name: Release Datasource
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Ensure tags are available
+        run: git fetch --tags --force
+
+      - name: Extract datasource and version from tag
+        id: extract
+        run: |
+          TAG_REF="${GITHUB_REF#refs/tags/}"   # e.g. ds/aws_cur/v0.1.0
+          echo "Tag ref: $TAG_REF"
+
+          DS=$(echo "$TAG_REF" | cut -d'/' -f2)
+          VERSION=$(echo "$TAG_REF" | cut -d'/' -f3)
+
+          echo "datasource=$DS" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pyyaml requests
+
+      - name: Release datasource
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          echo "🚀 Releasing datasource: ${{ steps.extract.outputs.datasource }} at version ${{ steps.extract.outputs.version }}"
+          python .github/scripts/release_datasource.py ${{ steps.extract.outputs.datasource }} ${{ steps.extract.outputs.version }}

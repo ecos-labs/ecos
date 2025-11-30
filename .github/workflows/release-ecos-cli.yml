@@ -1,0 +1,49 @@
+name: Release ecos CLI
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      skip_cli:
+        description: "Skip CLI release"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_cli != 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        continue-on-error: true # Don't fail CI on linting issues
+        with:
+          version: latest
+          working-directory: code/cli
+
+      - name: Test
+        working-directory: code/cli
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Release with GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+          workdir: code/cli
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

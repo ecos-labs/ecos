@@ -1,0 +1,73 @@
+# Pre-commit hooks configuration for ecos
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^(code/dbt/target/|code/cli/dist/)
+      - id: end-of-file-fixer
+        exclude: ^(code/dbt/target/|code/cli/dist/)
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  # Go formatting and linting
+  - repo: local
+    hooks:
+      - id: go-fmt
+        name: go fmt
+        entry: .pre-commit-hooks/go-fmt.sh
+        language: system
+        pass_filenames: false
+        files: ^code/cli/.*\.go$
+
+      - id: go-vet
+        name: go vet
+        entry: .pre-commit-hooks/go-vet.sh
+        language: system
+        pass_filenames: false
+        require_serial: true
+        files: ^code/cli/.*\.go$
+
+      - id: golangci-lint
+        name: golangci-lint
+        entry: .pre-commit-hooks/golangci-lint.sh
+        language: system
+        pass_filenames: false
+        require_serial: true
+        files: ^code/cli/.*\.go$
+
+  # SQL linting with SQLFluff + dbt
+  - repo: https://github.com/sqlfluff/sqlfluff
+    rev: 3.4.0
+    hooks:
+      - id: sqlfluff-lint
+        name: sqlfluff-lint (dbt)
+        entry: .pre-commit-hooks/sqlfluff-lint.sh
+        language: python
+        pass_filenames: false
+        types_or: [sql]
+        additional_dependencies:
+          - sqlfluff-templater-dbt==3.4.0
+          - dbt-core==1.9.2
+          - dbt-athena==1.9.2
+
+      - id: sqlfluff-fix
+        name: sqlfluff-fix (dbt)
+        entry: .pre-commit-hooks/sqlfluff-fix.sh
+        language: python
+        pass_filenames: false
+        types_or: [sql]
+        additional_dependencies:
+          - sqlfluff-templater-dbt==3.4.0
+          - dbt-core==1.9.2
+          - dbt-athena==1.9.2
