@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────
+# ECOS PROJECT CONFIGURATION
+# ─────────────────────────────────────────────────────────────────
+# This configuration file defines how your ecos project transforms and processes data
+
+project_name: {{ .ProjectName }}
+model_version: {{ .ModelVersion }}
+data_source: {{ .DataSource }}
+
+transform:
+  dbt:
+    project_dir: {{ .ProjectDir }}
+    profile_dir: {{ .ProfileDir }}
+    profile_file: profiles.yml
+    profile: {{ .Profile }}
+    target: {{ .Target }}
+    aws_profile: {{ .AWSProfile }}
+
+    # ─────────────────────────────────────────────────────────────────
+    # DATA SOURCE VARIABLES (set by 'ecos init')
+    # ─────────────────────────────────────────────────────────────────
+    # Data source configuration (populated by 'ecos init')
+    # Only variables for your selected datasource are included
+    vars:
+{{- if .DatasourceVars }}
+{{- range .DatasourceVars }}
+      {{ .Key }}: "{{ .Value }}"
+{{- end }}
+{{- end }}
+
+    # ─────────────────────────────────────────────────────────────────
+    # MATERIALIZATION CONFIGURATION
+    # ─────────────────────────────────────────────────────────────────
+    # Global mode sets the default materialization type for all layers
+    # Options: 'view', 'table', 'incremental'
+    materialization:
+      mode: {{ .MaterializationMode | default "view" }}
+
+      # Layer-specific materialization overrides
+      # Default: all layers use global mode unless overridden
+      layer_overrides:
+        bronze: {{ .BronzeMaterialization | default "view" }}
+        silver: {{ .SilverMaterialization | default "view" }}
+        gold: {{ .GoldMaterialization | default "view" }}
+
+# ─────────────────────────────────────────────────────────────────
+# AWS CONFIGURATION
+# ─────────────────────────────────────────────────────────────────
+aws:
+  region: {{ .AWSRegion }}
+  database: {{ .Database }}
+  dbt_workgroup: {{ .DBTWorkgroup }}
+  adhoc_workgroup: {{ .AdhocWorkgroup }}
+  results_bucket: {{ .ResultsBucket }}

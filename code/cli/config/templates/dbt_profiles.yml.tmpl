@@ -1,0 +1,17 @@
+{{.Profile}}:
+  target: {{.Target}}
+  outputs:
+    {{.Target}}:
+      type: athena
+      s3_staging_dir: s3://{{.ResultsBucket}}/dbt/staging/
+      s3_data_dir: s3://{{.ResultsBucket}}/dbt/data/
+      s3_data_naming: schema_table
+      s3_tmp_table_dir: s3://{{.ResultsBucket}}/dbt/tmp/
+      region_name: {{.AWSRegion}}
+      database: awsdatacatalog
+      schema: {{.Database}}
+      work_group: {{.Workgroup}}
+      aws_profile_name: {{.AWSProfile}}
+      threads: 8
+      num_retries: 1
+      num_boto3_retries: 5

@@ -1,0 +1,90 @@
+name: "ecos"
+version: "1.0.0"
+require-dbt-version: ">=1.9.0"
+
+profile: "{{.Profile}}"
+
+model-paths: ["models"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+flags:
+  debug: false
+  fail_fast: true
+  send_anonymous_usage_stats: false
+
+# ─────────────────────────────────────────────────────────────────
+# ECOS CONFIGURATION VARIABLES
+# ─────────────────────────────────────────────────────────────────
+vars:
+  # ─────────────────────────────────────────────────────────────────
+  # ENVIRONMENT INITIALIZATION (set by 'ecos init')
+  # ─────────────────────────────────────────────────────────────────
+  # Data source configuration (populated by 'ecos init')
+  # Only variables for your selected datasource are included
+
+{{- if .DatasourceVars }}
+{{- range .DatasourceVars }}
+  {{ .Key }}: "{{ .Value }}"
+{{- end }}
+{{- end }}
+
+  # Toggle Iceberg support (true for production, false for development)
+  iceberg_enabled: {{ .IcebergEnabled | toString }}
+
+  # Billing period range (defaults to last 2 months if not specified)
+  billing_period_start: {{ .BillingPeriodStart | default "null" }} # Format: 'YYYY-MM' or null for auto
+  billing_period_end: {{ .BillingPeriodEnd | default "null" }} # Format: 'YYYY-MM' or null for current
+
+  # ─────────────────────────────────────────────────────────────────
+  # DYNAMIC MATERIALIZATION CONFIGURATION
+  # ─────────────────────────────────────────────────────────────────
+
+  # Global materialization mode (default: view)
+  # Options: 'view', 'table', 'incremental'
+  ecos_materialization_mode: "{{.MaterializationMode}}"
+
+  # Layer-specific materialization overrides
+  # Default: bronze/silver = view, gold = table
+  ecos_layer_materializations:
+    bronze: "{{.BronzeMaterialization | default "view"}}"
+    silver: "{{.SilverMaterialization | default "view"}}"
+    gold: "{{.GoldMaterialization | default "view"}}"
+
+  # Model-specific materialization overrides
+  # Example: to enable materialization for specific model like code/dbt/models/2_silver/aws/cur/silver_aws__cur_enhanced.sql
+  # ecos_model_materializations:
+  #   silver_aws__cur_enhanced: "view"
+
+  # Enable Iceberg for tables (when iceberg_enabled=true)
+  ecos_use_iceberg: {{ .UseIceberg | toString }}
+
+  # Enable partitioning for eligible models
+  ecos_enable_partitioning: {{ .EnablePartitioning | toString }}
+
+models:
+  ecos:
+    1_bronze: {} # Dynamic materialization via macros
+    2_silver: {} # Dynamic materialization via macros
+    3_gold: {} # Dynamic materialization via macros
+    4_serve:
+      +materialized: view
+
+seeds:
+  ecos:
+    +enabled: true
+    +full_refresh: true
+
+tests:
+  +severity: error
+  +store_failures: true
+  +database: awsdatacatalog
+  +schema: audit

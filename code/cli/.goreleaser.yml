@@ -1,0 +1,229 @@
+version: 2
+
+project_name: ecos
+
+before:
+  hooks:
+    - go mod download
+    - go mod tidy
+
+builds:
+  - id: ecos-cli
+    main: ./main.go
+    binary: ecos-{{ .Os}}-{{ .Arch}}
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -v
+    ldflags:
+      - -s -w
+      - -X github.com/ecos-labs/ecos-core/code/cli/version.Version={{ .Version }}
+      - -X github.com/ecos-labs/ecos-core/code/cli/version.Commit={{ .FullCommit }}
+      - -X github.com/ecos-labs/ecos-core/code/cli/version.Date={{ .Date }}
+      - -extldflags="-static"
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: s390x
+      - goos: darwin
+        goarch: ppc64le
+      - goos: windows
+        goarch: s390x
+      - goos: windows
+        goarch: ppc64le
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: ecos-archive
+    ids:
+      - ecos-cli
+    name_template: '{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}'
+    files:
+      - LICENSE*
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+release:
+  github:
+    owner: ecos-labs
+    name: ecos
+  draft: false
+  prerelease: auto
+  name_template: "{{.ProjectName}} {{.Version}}"
+  header: |
+    # ecos CLI {{.Version}}
+
+    The **ecos CLI** is the command-line tool for [ecos](https://github.com/ecos-labs/ecos), an open source FinOps data stack that transforms AWS Cost and Usage Reports (CUR) into clean, enriched, high-performance datasets. Its analytics-ready semantic layer enables cost transparency, allocation, and optimization with actionable insights.
+
+    ## Built For
+
+    - **FinOps Teams** — cost analysis & attribution, commitment optimization, custom KPIs
+    - **Cloud Engineers** — resource optimization, waste elimination, pinpoint cost drivers/trends
+    - **Finance Teams** — allocation & budgets, savings tracking, BI-ready reports
+    - **Data Teams** — custom models in the serve layer, curated breakdowns for BI
+
+    For complete ecos documentation, see the [main README](https://github.com/ecos-labs/ecos/blob/main/README.md).
+
+    ## Installation
+
+    ### Homebrew (Recommended)
+
+    Install on macOS or Linux with Homebrew tap (prebuilt cask or formula):
+
+    ```
+    brew tap ecos-labs/homebrew-ecos
+    brew install --cask ecos      # Recommended for macOS (prebuilt binary)
+    # OR
+    brew install ecos             # Formula mode (Linux/macOS)
+    ```
+
+    ### Direct Binary Download
+
+    Download appropriate binary from assets:
+
+    **macOS Intel:**
+    ```
+    curl -L -o ecos.tar.gz https://github.com/ecos-labs/ecos/releases/download/{{.Tag}}/ecos-darwin-amd64.tar.gz
+    tar -xzf ecos.tar.gz
+    sudo mv ecos /usr/local/bin/
+    chmod +x /usr/local/bin/ecos
+    ```
+
+    **macOS Apple Silicon:**
+    ```
+    curl -L -o ecos.tar.gz https://github.com/ecos-labs/ecos/releases/download/{{.Tag}}/ecos-darwin-arm64.tar.gz
+    tar -xzf ecos.tar.gz
+    sudo mv ecos /usr/local/bin/
+    chmod +x /usr/local/bin/ecos
+    ```
+
+    **Linux x86_64:**
+    ```
+    curl -L -o ecos.tar.gz https://github.com/ecos-labs/ecos/releases/download/{{.Tag}}/ecos-linux-amd64.tar.gz
+    tar -xzf ecos.tar.gz
+    sudo mv ecos /usr/local/bin/
+    chmod +x /usr/local/bin/ecos
+    ```
+
+    **Linux ARM64:**
+    ```
+    curl -L -o ecos.tar.gz https://github.com/ecos-labs/ecos/releases/download/{{.Tag}}/ecos-linux-arm64.tar.gz
+    tar -xzf ecos.tar.gz
+    sudo mv ecos /usr/local/bin/
+    chmod +x /usr/local/bin/ecos
+    ```
+
+    **Windows:**
+    Download and extract the Windows zip file from the release assets. Add the directory to your PATH, or run `ecos.exe` directly.
+
+    ### Go Install
+    ```
+    go install github.com/ecos-labs/ecos/code/cli@latest
+    ```
+
+    ### Build from Source
+    ```
+    git clone https://github.com/ecos-labs/ecos.git
+    cd ecos/code/cli
+    go build -o ecos main.go
+    sudo mv ecos /usr/local/bin/
+    ```
+
+    ### Quick Start
+    ```
+    ecos init
+    ecos transform run
+    ecos version
+    ```
+
+    ## Prerequisites
+
+    - macOS, Linux, or Windows
+    - Python 3.8+ (for dbt features)
+    - Cloud CLI for AWS, Azure, or GCP as appropriate
+
+    ## More Info
+    - [ecos Documentation](https://github.com/ecos-labs/ecos/blob/main/README.md) - Complete ecos project documentation
+    - [Full CLI docs](https://github.com/ecos-labs/ecos/blob/main/code/cli/README.md)
+    - [Examples and troubleshooting](https://github.com/ecos-labs/ecos/blob/main/code/cli/README.md#examples)
+    - [Report issues](https://github.com/ecos-labs/ecos/issues)
+  footer: |
+    ## What's New in {{.Version}}
+    See the changelog below for detailed changes in this release.
+
+    ## Support & Resources
+
+    - 📖 [ecos Documentation](https://github.com/ecos-labs/ecos/blob/main/README.md) - Main project README with complete documentation
+    - 📚 [Complete Documentation](https://ecos-labs.io/docs/cli-installation)
+    - 🐛 [Report Issues](https://github.com/ecos-labs/ecos/issues)
+    - 💬 [Discussions](https://github.com/ecos-labs/ecos/discussions)
+    - 🏠 [GitHub Repository](https://github.com/ecos-labs/ecos)
+
+    ---
+    [Issues & Support](https://github.com/ecos-labs/ecos/issues)
+changelog:
+  use: github
+  sort: asc
+  abbrev: 0
+  groups:
+    - title: "Breaking Changes"
+      regexp: '^.*?(\([[:word:]]+\))??!:.+$'
+      order: 0
+    - title: "Features"
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 100
+    - title: "Bug fixes"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 200
+    - title: "Documentation"
+      regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
+      order: 300
+    - title: "Other work"
+      order: 999
+  filters:
+    exclude:
+      - "^test:"
+      - "^docs:"
+      - "^chore:"
+
+homebrew_casks:
+  - name: ecos
+    repository:
+      owner: ecos-labs
+      name: homebrew-ecos
+      branch: main
+    homepage: "https://github.com/ecos-labs/ecos"
+    description: "ecos CLI orchestrates cloud FinOps projects (AWS, Azure, GCP): setup, resource bootstrap, dbt-powered data transformation, and automation from the terminal."
+    url:
+      template: "https://github.com/ecos-labs/ecos/releases/download/{{ .Tag }}/ecos-darwin-{{ .Arch }}.tar.gz"
+      verified: "github.com/ecos-labs/ecos"
+    binaries:
+      - ecos
+    caveats: |
+      Requires Python 3.8+ for dbt features.
+      On macOS, if you encounter a quarantine warning, run:
+        xattr -dr com.apple.quarantine /usr/local/bin/ecos
+    license: "Apache-2.0"
+
+brews:
+  - name: ecos
+    repository:
+      owner: ecos-labs
+      name: homebrew-ecos
+      branch: main
+    homepage: "https://github.com/ecos-labs/ecos"
+    description: "ecos CLI orchestrates cloud FinOps workflows: project setup, resource provisioning, dbt workflow automation."
+    license: "Apache-2.0"
+    install: |
+      bin.install "ecos"
+    test: |
+      system "#{bin}/ecos --version"
