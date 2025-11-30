@@ -1,0 +1,87 @@
+################################################################################
+# SQLFluff configuration
+# https://docs.sqlfluff.com/en/stable/configuration/
+################################################################################
+
+[sqlfluff]
+dialect = athena
+templater = dbt
+exclude_rules = structure.column_order, aliasing.forbid, ambiguous.column_references, references.consistent, references.keywords
+runaway_limit = 10
+sql_file_exts = .sql
+
+max_line_length = 120
+large_file_skip_byte_limit = 0
+# verbose is an integer (0-2) indicating the level of log output
+verbose = 0
+
+################################################################################
+# dbt configuration
+################################################################################
+
+[sqlfluff:templater:dbt]
+project_dir = ./
+profiles_dir = ./
+
+################################################################################
+# Rules configuration
+################################################################################
+
+[sqlfluff:indentation]
+tab_space_size = 4
+indent_unit = space
+
+[sqlfluff:layout:type:comma]
+spacing_before = touch
+line_position = leading
+
+# rules
+[sqlfluff:rules]
+
+# layout rules
+[sqlfluff:rules:layout.spacing]
+comma_style = leading
+
+
+# capitalisation rules
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.types]
+capitalisation_policy = lower
+
+
+# Aliasing rules
+[sqlfluff:rules:aliasing.forbid]
+ignore_table_alias = False
+
+[sqlfluff:rules:aliasing.table]
+aliasing = explicit
+
+[sqlfluff:rules:aliasing.column]
+aliasing = explicit
+
+[sqlfluff:rules:aliasing.expression]
+allow_scalar = False
+
+
+# ambiguous rules
+[sqlfluff:rules:ambiguous.column_references]
+group_by_and_order_by_style = implicit
+
+[sqlfluff:rules:ambiguous.join]
+fully_qualify_join_types = inner
+
+# Jinja Padding
+[sqlfluff:rules:jinja.padding]
+single_space = true

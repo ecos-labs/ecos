@@ -1,0 +1,122 @@
+version: 2
+
+macros:
+  - name: aws_mappings_data_transfer_category
+    description: >
+      Categorizes AWS data transfer operations and usage types for comprehensive networking cost analysis.
+      Provides detailed breakdown of data transfer patterns across AWS services and regions.
+    arguments:
+      - name: operation_col
+        type: string
+        description: Column reference for AWS operation.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+      - name: service_code_col
+        type: string
+        description: Column reference for AWS service code.
+
+  - name: aws_mappings_nat_gateway_category
+    description: >
+      Categorizes AWS NAT Gateway usage types into specific service categories.
+      Categorizes AWS NAT Gateway usage types for detailed networking cost analysis.
+      Provides breakdown of NAT Gateway usage patterns and data processing costs.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for usage type (default 'usage_type')
+    returns:
+      type: string
+      description: NAT Gateway category string
+
+  - name: aws_mappings_network_category
+    description: >
+      Categorizes AWS core networking services based on service code, usage type, and operation.
+      Handles NAT Gateway, VPN, VPC Endpoint, Transit Gateway, Direct Connect, and general data transfer patterns.
+      Provides comprehensive network service categorization for cost optimization analysis.
+    arguments:
+      - name: service_code_col
+        type: string
+        description: Column reference for service code (default 'service_code')
+      - name: usage_type_col
+        type: string
+        description: Column reference for usage type (default 'usage_type')
+      - name: operation_col
+        type: string
+        description: Column reference for operation (default 'operation')
+    returns:
+      type: string
+      description: Network service category string
+
+  - name: aws_mappings_elb_category
+    description: >
+      Categorizes AWS Elastic Load Balancing usage types into general categories.
+      Handles capacity units (LCU), data processing, data transfer, and hourly charges.
+      Provides streamlined ELB cost categorization for optimization analysis.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for usage type (default 'usage_type')
+      - name: operation_col
+        type: string
+        description: Column reference for operation (default 'operation')
+    returns:
+      type: string
+      description: Elastic Load Balancing category string
+
+  - name: aws_mappings_api_gateway_category
+    description: >
+      Categorizes AWS API Gateway usage types into general categories.
+      Handles requests, messages, WebSocket, cache usage, and data transfer.
+      Provides streamlined API Gateway cost categorization.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for usage type (default 'usage_type')
+      - name: operation_col
+        type: string
+        description: Column reference for operation (default 'operation')
+    returns:
+      type: string
+      description: API Gateway category string
+
+  - name: aws_mappings_cloudfront_category
+    description: >
+      Categorizes AWS CloudFront usage types into general categories.
+      Handles requests, data transfer, origin, edge compute, and SSL.
+      Provides streamlined CDN cost categorization for optimization analysis.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for usage type (default 'usage_type')
+      - name: operation_col
+        type: string
+        description: Column reference for operation (default 'operation')
+    returns:
+      type: string
+      description: CloudFront category string
+
+  - name: aws_mappings_route53_category
+    description: >
+      Categorizes AWS Route 53 usage types into general categories.
+      Handles queries, hosted zones, health checks, resolver, and domains.
+      Provides streamlined DNS service cost categorization.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for usage type (default 'usage_type')
+      - name: operation_col
+        type: string
+        description: Column reference for operation (default 'operation')
+    returns:
+      type: string
+      description: Route 53 category string
+
+  - name: aws_mappings_transfer_category
+    description: >
+      Categorizes AWS Transfer Family usage types for managed file transfer cost tracking.
+      Maps SFTP, FTPS, FTP, and AS2 protocols with endpoints, uploads, downloads, and data transfer to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

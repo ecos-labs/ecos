@@ -1,0 +1,103 @@
+version: 2
+
+macros:
+  - name: aws_transforms_arn_prefix_removal
+    description: >
+      Cleans AWS ARN by removing the ARN prefix and keeping only the resource identifier.
+      Transforms full ARN strings into clean resource identifiers for better readability and analysis.
+      Handles various ARN formats across different AWS services.
+    arguments:
+      - name: arn_col
+        type: string
+        description: Column reference for AWS ARN (Amazon Resource Name).
+  - name: aws_transforms_cur_surrogate_key
+    description: >
+      Generates a surrogate key for CUR (Cost and Usage Report) records.
+      Creates unique identifiers for cost and usage records using multiple dimensions.
+      Essential for deduplication and data lineage tracking in cost analytics.
+    arguments: []
+  - name: aws_transforms_cur_all_tag_flattening
+    description: >
+      Dynamically discovers all tag keys from data and flattens them into individual columns.
+      This macro queries the table to find all existing tag keys and creates columns for each.
+    arguments:
+      - name: relation
+        type: relation
+        description: The table/view relation to analyze for tag keys.
+      - name: resource_tags_column
+        type: string
+        description: Name of the column containing tags (default resource_tags).
+      - name: tag_prefix
+        type: string
+        description: "Prefix for flattened column names (default: resource_tags_)."
+    return_type: sql_expression
+    return_description: SQL columns for all discovered tag keys in the data.
+  - name: aws_transforms_ec2_instance_extraction_overall
+    description: >
+      Extracts all EC2 instance components from instance type using regex patterns.
+      Returns a struct containing all parsed components (e.g., generation, series, size, options) in one operation.
+      Comprehensive parsing for complete instance type analysis.
+    arguments:
+      - name: instance_type_col
+        type: string
+        description: Column reference for EC2 instance type (e.g., m5.large, c5n.xlarge).
+
+  - name: aws_transforms_ec2_instance_generation
+    description: >
+      Extracts EC2 instance generation from instance type using regex patterns.
+      Returns the generation number (e.g., 5 from m5.large, 6 from c6i.xlarge).
+      Used for instance family evolution analysis and optimization recommendations.
+    arguments:
+      - name: instance_type_col
+        type: string
+        description: Column reference for EC2 instance type.
+  - name: aws_transforms_ec2_instance_options
+    description: >
+      Extracts EC2 instance options from instance type using regex patterns.
+      Returns additional options (e.g., 'n' for enhanced networking, 'i' for high I/O).
+      Helps identify specialized instance capabilities and pricing factors.
+    arguments:
+      - name: instance_type_col
+        type: string
+        description: Column reference for EC2 instance type.
+  - name: aws_transforms_ec2_instance_series
+    description: >
+      Extracts EC2 instance series from instance type using regex patterns.
+      Returns the instance family series (e.g., 'm' from m5.large, 'c' from c5.xlarge).
+      Used for workload categorization and rightsizing analysis.
+    arguments:
+      - name: instance_type_col
+        type: string
+        description: Column reference for EC2 instance type.
+  - name: aws_transforms_ec2_instance_size
+    description: >
+      Extracts EC2 instance size from instance type using regex patterns.
+      Returns the size component (e.g., 'large' from m5.large, 'xlarge' from c5.xlarge).
+      Essential for capacity planning and cost optimization analysis.
+    arguments:
+      - name: instance_type_col
+        type: string
+        description: Column reference for EC2 instance type.
+  - name: aws_transforms_usage_type_region_removal
+    description: >
+      Removes AWS region prefixes from usage type values while preserving service prefixes and
+      maintaining data integrity. Handles various region formats (e.g., abbreviated codes,
+      inter-region transfers, wavelength zones, and full region names). Essential for
+      normalizing usage types across regions for consistent cost analysis and reporting.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference containing AWS usage type values (default 'usage_type').
+    returns:
+      type: string
+      description: Usage type with region prefix removed, preserving service prefixes.
+  - name: aws_transforms_cur_tag_unification
+    description: >
+      Generates unified resource_tags column from either CUR 1.0 or CUR 2.0 format.
+      Converts flat tag columns to MAP type for CUR 1.0, or passes through existing MAP for CUR 2.0.
+    arguments:
+      - name: columns
+        type: list
+        description: List of column names from the CUR table.
+    return_type: sql_expression
+    return_description: SQL expression that produces a MAP(varchar, varchar) containing all resource tags.

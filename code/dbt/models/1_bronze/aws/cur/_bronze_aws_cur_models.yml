@@ -1,0 +1,286 @@
+version: 2
+
+sources:
+  - name: cur_source
+    database: "{{ var('cur_database', 'awsdatacatalog') }}"
+    schema: "{{ var('cur_schema', '') }}"
+    tables:
+      - name: cur_table
+        identifier: "{{ var('cur_table', '') }}"
+        description: AWS Cost and Usage Report.
+
+models:
+- name: bronze_aws__cur_source
+  description: |
+    Raw AWS Cost and Usage Report (CUR) data with minimal transformations. This is the entry point for all AWS billing and usage data, containing detailed line items for every AWS service usage with cost allocation, resource tags and billing dimensions.
+    The model handles both CUR Legacy and CUR 2.0 format, standardizing columns and dynamically includes all resource tag columns present in the source data.
+
+    See https://docs.aws.amazon.com/cur/latest/userguide/table-dictionary-cur2.html for AWS CUR schema reference.
+  columns:
+  - name: usage_date
+    description: UTC start timestamp for the usage interval.
+    data_type: timestamp
+  - name: account_id
+    description: Account ID that incurred the usage.
+    data_type: varchar
+  - name: account_name
+    description: Account name that incurred the usage.
+    data_type: varchar
+  - name: payer_account_id
+    description: Payer/management account ID responsible for the bill.
+    data_type: varchar
+  - name: payer_account_name
+    description: Payer/management account name responsible for the bill.
+    data_type: varchar
+  - name: billing_entity
+    description: Billing entity indicating AWS or AWS Marketplace.
+    data_type: varchar
+  - name: bill_type
+    description: Bill type for the report (Anniversary, Purchase, or Refund).
+    data_type: varchar
+  - name: invoicing_entity
+    description: AWS entity that issues the invoice.
+    data_type: varchar
+  - name: invoice_id
+    description: Invoice ID for this line item; blank until the bill finalizes.
+    data_type: varchar
+  - name: legal_entity
+    description: Seller of record for the product.
+    data_type: varchar
+  - name: billing_period_start_date
+    description: UTC start of the billing period covered.
+    data_type: timestamp
+  - name: billing_period_end_date
+    description: UTC end of the billing period covered.
+    data_type: timestamp
+  - name: product_family
+    description: Product family classification from CUR metadata.
+    data_type: varchar
+  - name: product_code
+    description: Product code of the measured service.
+    data_type: varchar
+  - name: product_name
+    description: Product name from CUR product metadata.
+    data_type: varchar
+  - name: product_service_code
+    description: Short service code identifying the AWS service.
+    data_type: varchar
+  - name: product_group
+    description: Product grouping attribute from CUR metadata.
+    data_type: varchar
+  - name: charge_type
+    description: Charge classification such as Usage, Discount, Tax, or Fee.
+    data_type: varchar
+  - name: usage_type
+    description: Usage type descriptor for the line item.
+    data_type: varchar
+  - name: operation
+    description: AWS operation associated with the charge.
+    data_type: varchar
+  - name: item_description
+    description: Description summarizing the line item charge.
+    data_type: varchar
+  - name: availability_zone
+    description: Availability Zone tied to the resource.
+    data_type: varchar
+  - name: region
+    description: AWS Region associated with the service.
+    data_type: varchar
+  - name: product_from_location
+    description: Source location for the usage or transfer.
+    data_type: varchar
+  - name: product_to_location
+    description: Destination location for the usage or transfer.
+    data_type: varchar
+  - name: product_attachment_type
+    description: Attachment type metadata for network services.
+    data_type: varchar
+  - name: resource_id
+    description: Resource identifier when resource-level data is enabled.
+    data_type: varchar
+  - name: instance_type
+    description: Instance type including size and family.
+    data_type: varchar
+  - name: instance_type_family
+    description: Instance family classification for compute resources.
+    data_type: varchar
+  - name: operating_system
+    description: Operating system for the resource.
+    data_type: varchar
+  - name: tenancy
+    description: Instance tenancy (Shared, Dedicated, or Host).
+    data_type: varchar
+  - name: processor
+    description: Physical processor used by the instance.
+    data_type: varchar
+  - name: processor_features
+    description: Processor feature flags reported in CUR.
+    data_type: varchar
+  - name: processor_architecture
+    description: Processor architecture (e.g., x86_64, ARM).
+    data_type: varchar
+  - name: database_engine
+    description: Database engine associated with the service.
+    data_type: varchar
+  - name: cache_engine
+    description: Cache engine associated with the service.
+    data_type: varchar
+  - name: engine
+    description: Engine attribute for the product.
+    data_type: varchar
+  - name: storage
+    description: Storage characteristics for the product.
+    data_type: varchar
+  - name: deployment_option
+    description: Deployment option (e.g., Multi-AZ, Serverless).
+    data_type: varchar
+  - name: volume_type
+    description: EBS volume type (e.g., gp3, io2).
+    data_type: varchar
+  - name: volume_api_name
+    description: EBS volume API name exposed in pricing.
+    data_type: varchar
+  - name: license_model
+    description: License model (e.g., BYOL, License Included).
+    data_type: varchar
+  - name: vcpu
+    description: vCPU count for the resource.
+    data_type: varchar
+  - name: memory
+    description: Memory allocated to the resource.
+    data_type: varchar
+  - name: gpu_memory
+    description: GPU memory allocated to the resource.
+    data_type: varchar
+  - name: resource_tags
+    description: Map of cost allocation tags enabled in the CUR.
+    data_type: map<string,string>
+  - name: pricing_purchase_option
+    description: Purchase option metadata (e.g., On-Demand, Reserved).
+    data_type: varchar
+  - name: pricing_offering_class
+    description: Reserved Instance offering class.
+    data_type: varchar
+  - name: pricing_lease_contract_length
+    description: Reserved Instance lease term length.
+    data_type: varchar
+  - name: pricing_unit
+    description: Unit used to price the usage (e.g., hours, GB).
+    data_type: varchar
+  - name: pricing_term
+    description: Whether the usage is Reserved or On-Demand.
+    data_type: varchar
+  - name: savings_plan_arn
+    description: Unique Savings Plan identifier.
+    data_type: varchar
+  - name: savings_plan_effective_cost
+    description: Portion of the Savings Plan commitment allocated to this line item.
+    data_type: double
+  - name: savings_plan_savings_plan_rate
+    description: Savings Plan rate applied to the usage.
+    data_type: double
+  - name: savings_plan_total_commitment_to_date
+    description: Total amortized and recurring commitment consumed to date.
+    data_type: double
+  - name: savings_plan_used_commitment
+    description: Dollar amount of Savings Plan commitment consumed.
+    data_type: double
+  - name: savings_plan_recurring_commitment_for_billing_period
+    description: Recurring Savings Plan fee for the billing period.
+    data_type: double
+  - name: savings_plan_amortized_upfront_commitment_for_billing_period
+    description: Amortized upfront Savings Plan amount for the billing period.
+    data_type: double
+  - name: savings_plan_offering_type
+    description: Type of Savings Plan purchased.
+    data_type: varchar
+  - name: savings_plan_payment_option
+    description: Savings Plan payment option (e.g., No, Partial, All Upfront).
+    data_type: varchar
+  - name: savings_plan_purchase_term
+    description: Savings Plan term length.
+    data_type: varchar
+  - name: savings_plan_start_time
+    description: Start timestamp of the Savings Plan agreement.
+    data_type: varchar
+  - name: savings_plan_end_time
+    description: End timestamp of the Savings Plan agreement.
+    data_type: varchar
+  - name: savings_plan_net_effective_cost
+    description: Net effective Savings Plan cost after discounts.
+    data_type: double
+  - name: savings_plan_net_amortized_upfront_commitment_for_billing_period
+    description: Net amortized upfront Savings Plan amount for the billing period.
+    data_type: double
+  - name: savings_plan_net_recurring_commitment_for_billing_period
+    description: Net recurring Savings Plan amount for the billing period.
+    data_type: double
+  - name: reservation_arn
+    description: Reserved Instance ARN identifier.
+    data_type: varchar
+  - name: reservation_effective_cost
+    description: Effective Reserved Instance cost allocated to this line item.
+    data_type: double
+  - name: reservation_unused_amortized_upfront_fee_for_billing_period
+    description: Unused amortized upfront RI amount for the billing period.
+    data_type: double
+  - name: reservation_unused_recurring_fee
+    description: Unused recurring RI fee (for Partial or No Upfront RIs).
+    data_type: double
+  - name: reservation_amortized_upfront_fee_for_billing_period
+    description: Amortized upfront RI amount for the billing period.
+    data_type: double
+  - name: reservation_start_time
+    description: Start timestamp of the Reserved Instance term.
+    data_type: varchar
+  - name: reservation_end_time
+    description: End timestamp of the Reserved Instance term.
+    data_type: varchar
+  - name: reservation_net_effective_cost
+    description: Net effective Reserved Instance cost after discounts.
+    data_type: double
+  - name: reservation_net_unused_amortized_upfront_fee_for_billing_period
+    description: Net unused amortized upfront RI amount for the billing period.
+    data_type: double
+  - name: reservation_net_unused_recurring_fee
+    description: Net unused recurring RI fee after discounts.
+    data_type: double
+  - name: identity_line_item_id
+    description: Unique line item identifier within a CUR partition.
+    data_type: varchar
+  - name: product_sku
+    description: SKU (combining product, usage type, and operation).
+    data_type: varchar
+  - name: normalization_factor
+    description: Normalization factor for size-flexible RI usage.
+    data_type: double
+  - name: normalized_usage_amount
+    description: Usage expressed in normalized units.
+    data_type: double
+  - name: usage_amount
+    description: Usage quantity recorded for the line item.
+    data_type: decimal
+  - name: unblended_cost
+    description: Unblended cost for the line item.
+    data_type: decimal
+  - name: unblended_rate
+    description: Unblended rate per unit of usage.
+    data_type: string
+  - name: net_unblended_cost
+    description: After-discount unblended cost for the line item.
+    data_type: double
+  - name: net_unblended_rate
+    description: After-discount unblended rate per unit.
+    data_type: string
+  - name: public_on_demand_cost
+    description: Cost calculated at public On-Demand rates.
+    data_type: decimal
+  - name: public_on_demand_rate
+    description: Public On-Demand rate applied to the usage.
+    data_type: string
+  - name: bundled_discount
+    description: Usage-based bundled discount applied to the line item.
+    data_type: double
+  - name: billing_period
+    description: Billing period label in YYYY-MM format derived from CUR partitions.
+    data_type: varchar

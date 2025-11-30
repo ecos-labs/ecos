@@ -1,0 +1,76 @@
+version: 2
+
+macros:
+  - name: utils_detect_columns
+    description: >
+      Checks if a column with a specific prefix exists in a given list of columns.
+      Utility function for dynamic column detection and conditional logic in dbt models.
+      Returns true if any column starts with the specified prefix, false otherwise.
+    arguments:
+      - name: columns
+        type: list
+        description: List of column names to search within.
+      - name: prefix
+        type: string
+        description: The prefix string to search for in column names.
+
+  - name: utils_divide_safe
+    description: >
+      Performs safe division with null handling to prevent division by zero errors.
+      Returns null when dividing by zero or null, with optional default value.
+      Utility for calculating rates and percentages in analytical models.
+    arguments:
+      - name: numerator
+        type: numeric
+        description: The numerator value for division.
+      - name: denominator
+        type: numeric
+        description: The denominator value for division.
+      - name: default_value
+        type: numeric
+        description: Optional default value to return when division would result in null.
+
+  - name: utils_get_prefixed_columns
+    description: >
+      Gets a list of columns that start with a defined prefix from a given relation.
+      Utility for dynamic column selection and processing in dbt models.
+      Returns a comma-separated list of column names starting with the specified prefix.
+    arguments:
+      - name: relation
+        type: relation
+        description: The dbt relation object to extract columns from.
+      - name: prefix
+        type: string
+        description: The prefix string to filter column names by.
+
+  - name: utils_resolve_cur_columns
+    description: >
+      Resolves column names between AWS CUR legacy vs CUR 2.0 formats by matching against available columns.
+      This macro helps maintain compatibility across different CUR data formats by dynamically selecting
+      the appropriate column name or casting null if the column doesn't exist.
+    arguments:
+      - name: column_name
+        type: string
+        description: The target column name to resolve.
+      - name: data_type
+        type: string
+        description: The data type to cast null to if column is not found.
+      - name: columns
+        type: list
+        description: List of available columns to search within.
+
+  - name: utils_switch_cur_partition
+    description: >
+      Determines the appropriate CUR partition column based on available columns in legacy and CUR 2.0 formats.
+      Returns billing_period for CUR 2.0, year-month string for legacy CUR, or null if neither format is detected.
+    arguments:
+      - name: columns
+        type: list
+        description: List of available columns to determine partition strategy.
+
+  - name: validate_s3_config
+    description: >
+      Validates S3 bucket configuration to ensure placeholder values are replaced with actual bucket names.
+      Prevents deployment with unconfigured placeholders and provides clear error messages with configuration options.
+      Should be called during materialization setup for partitioned tables that require S3 configuration.
+    arguments: []

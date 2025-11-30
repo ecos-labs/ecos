@@ -1,0 +1,109 @@
+version: 2
+
+macros:
+  - name: aws_mappings_guardduty_category
+    description: >
+      Categorizes Amazon GuardDuty usage types for threat detection cost tracking.
+      Maps malware protection, S3 scanning, and runtime monitoring to security categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_backup_category
+    description: >
+      Categorizes AWS Backup usage types for backup and recovery cost analysis.
+      Maps warm storage, cold storage, and cross-region backup to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+  - name: aws_mappings_kms_category
+    description: >
+      Categorizes AWS KMS usage types for key management cost tracking.
+      Maps key operations, storage, and API requests to understandable categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_secrets_manager_category
+    description: >
+      Categorizes AWS Secrets Manager usage types for secret management cost analysis.
+      Maps secret storage, API requests, and rotation operations to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_security_hub_category
+    description: >
+      Categorizes AWS Security Hub usage types for security monitoring cost tracking.
+      Maps findings, compliance checks, and integrations to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_cloudtrail_category
+    description: >
+      Categorizes AWS CloudTrail usage types for audit logging cost analysis.
+      Maps event logging, data events, and management events to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_config_category
+    description: >
+      Categorizes AWS Config usage types for configuration monitoring cost tracking.
+      Maps configuration items, rules, and remediation to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_awswaf_category
+    description: >
+      Categorizes AWS WAF usage types for web application firewall cost tracking.
+      Maps Web ACLs, rules, requests, bot control, and Shield protection to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_shield_category
+    description: >
+      Categorizes AWS Shield usage types for DDoS protection cost tracking.
+      Maps DDoS Response Team, advanced protection, and subscriptions to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_cloudhsm_category
+    description: >
+      Categorizes AWS CloudHSM usage types for hardware security module cost tracking.
+      Maps HSM instance types and usage hours to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_certificate_manager_category
+    description: >
+      Categorizes AWS Certificate Manager usage types for SSL/TLS certificate cost tracking.
+      Maps private CAs, certificate issuance, and OCSP services to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_cognito_category
+    description: >
+      Categorizes Amazon Cognito usage types for identity and access management cost tracking.
+      Maps user pools, identity pools, and advanced security features to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

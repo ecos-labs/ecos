@@ -1,0 +1,152 @@
+version: 2
+
+macros:
+  - name: get_billing_period_range
+    description: |
+      Centralized billing period calculation utility (internal)
+
+      This utility macro provides a single source of truth for billing period calculations used across the materialization framework. It calculates the date range based on either explicit configuration or the lookback period.
+
+      Calculation Logic:
+      - If billing_period_start/end vars are set, use them
+      - Otherwise, calculate from billing_lookback_months (default: 6 months)
+      - Return all values as a dictionary
+
+      Used By:
+      - get_model_config: For logging materialization decisions
+      - get_model_time_filter: For generating time-based SQL filters
+
+      Note:
+      This macro only calculates dates, it does NOT validate them. Validation is the responsibility of consuming macros (specifically get_model_time_filter).
+
+      Benefits:
+      - DRY principle: Single calculation logic used everywhere
+      - Consistency: Same date range used for config and filtering
+      - Maintainability: Change calculation logic in one place
+    arguments: []
+    return_type: dict
+    return_description: >
+      Dictionary with keys: 'start' (YYYY-MM string), 'end' (YYYY-MM string), 'lookback_months' (integer).
+
+  - name: get_materialization_type
+    description: >
+      Configuration-driven materialization with priority system (internal)
+      Determines materialization type using a three-tier priority system:
+      1. materialization_overrides (highest - per-model override)
+      2. materialization_mode (global mode: 'view' or 'smart')
+      3. default_materialization (lowest - model's default parameter)
+      Important: This macro is intentionally NOT documented in the main YAML file
+      to avoid parse-time evaluation issues. It must be loaded before being referenced.
+      Usage:
+      Only called internally by get_model_config(). Not intended for direct use in models.
+    arguments:
+      - name: default_materialization
+        type: string
+        description: >
+          Default materialization type ('view', 'table', or 'incremental').
+      - name: model_name
+        type: string
+        description: >
+          Optional model name (auto-detected if not provided).
+    return_type: string
+    return_description: >
+      Resolved materialization type: 'view', 'table', or 'incremental'.
+
+  - name: validate_lookback_months
+    description: >
+      Validation helper for billing_lookback_months configuration (internal)
+      Ensures the billing_lookback_months value is a positive integer and returns a safe default (6) if invalid.
+      This prevents runtime errors from invalid configuration values.
+      Validation Logic:
+      - Checks if value is a number and greater than 0
+      - Converts to integer if valid
+      - Returns default of 6 if invalid
+      - Logs warning when using default due to invalid input
+      Default Value: 6 months
+    arguments:
+      - name: lookback_months_raw
+        type: integer
+        description: >
+          Raw value from var('billing_lookback_months'). If not provided, reads from var automatically.
+    return_type: integer
+    return_description: >
+      Validated integer value (defaults to 6 if invalid or not provided).
+
+  - name: subtract_months
+    description: >
+      Date arithmetic helper for proper month subtraction (internal)
+      Subtracts months from a date using proper month arithmetic. This fixes the bug of using
+      days=30 approximation which is incorrect since not all months have 30 days (e.g., Feb has 28/29,
+      several have 31).
+      Algorithm:
+      - Converts date to total months since year 0
+      - Subtracts specified number of months
+      - Converts back to year/month/day
+      Examples:
+      - Oct 1, 2025 - 6 months = Apr 1, 2025
+      - Mar 1, 2024 - 1 month = Feb 1, 2024
+      - Jan 1, 2025 - 3 months = Oct 1, 2024
+    arguments:
+      - name: from_date
+        type: date
+        description: >
+          Python date object to subtract from.
+      - name: months_to_subtract
+        type: integer
+        description: >
+          Number of months to subtract (must be positive integer).
+    return_type: date
+    return_description: >
+      New Python date object with months properly subtracted.
+
+  - name: log_materialization
+    description: >
+      Logging helper for materialization decisions (internal)
+      Formats and logs materialization decisions with billing period info in a consistent format
+      across all materialization types. Used internally by get_model_config for user-friendly logging.
+      Log Format:
+      [icon] [model_name]: [type] from [start] to [end] ([lookback]-month lookback, partition: [col], format: [type], strategy: [strategy])
+      Features:
+      - Consistent formatting across all model types
+      - Optional detail parameters (e.g., format, strategy, partition)
+      - Only logs during execution phase (respects execute flag)
+    arguments:
+      - name: icon
+        type: string
+        description: >
+          Emoji icon for the materialization type (e.g., '🔍' for VIEW, '⚡' for INCREMENTAL).
+      - name: model_name
+        type: string
+        description: >
+          Name of the model being logged.
+      - name: type_details
+        type: string
+        description: >
+          Description of the materialization (e.g., 'VIEW', 'TABLE', 'INCREMENTAL').
+      - name: billing_start
+        type: string
+        description: >
+          Optional billing period start (YYYY-MM format).
+      - name: billing_end
+        type: string
+        description: >
+          Optional billing period end (YYYY-MM format).
+      - name: lookback_months
+        type: integer
+        description: >
+          Optional lookback period in months.
+      - name: format
+        type: string
+        description: >
+          Optional table format (e.g., 'Parquet/Hive', 'Iceberg').
+      - name: strategy
+        type: string
+        description: >
+          Optional incremental strategy (e.g., 'insert_overwrite', 'append').
+      - name: partition
+        type: string
+        description: >
+          Optional partition column(s) (e.g., 'billing_period').
+    return_type: void
+    return_description: >
+      No return value (logs to console).

@@ -1,0 +1,127 @@
+version: 2
+
+macros:
+  - name: get_model_config
+    description: >
+      Primary macro for dynamic materialization configuration
+
+      This macro dynamically applies materialization configurations to dbt models based on
+      materialization_mode and materialization_overrides in dbt_project.yml. It provides an
+      easy way to switch between development (views) and production (optimized tables/incremental) modes.
+
+      Key Features:
+      - Priority-based configuration: overrides > global mode > model default
+      - Auto-detects model name from dbt context (no need to pass it)
+      - Uses get_billing_period_range() utility for consistent date calculations
+      - Configurable lookback period (via billing_lookback_months, default: 6 months)
+      - Iceberg table support with append strategy
+      - Dynamic incremental strategies (insert_overwrite for Parquet, append for Iceberg)
+      - Clean S3 data organization with s3_data_naming: 'table'
+      - Comprehensive logging of materialization decisions
+
+      Note: This macro calculates billing periods for logging but does NOT validate them.
+      Validation is performed by get_model_time_filter() where it matters (during SQL execution).
+
+      Usage:
+      ```sql
+      {% raw %}{{ config(get_model_config('view')) }}{% endraw %}
+      {% raw %}{{ config(get_model_config('incremental')) }}{% endraw %}
+      {% raw %}{{ config(get_model_config('table')) }}{% endraw %}
+      ```
+    arguments:
+      - name: default_materialization
+        type: string
+        description: >
+          Default materialization type for this model (e.g., 'view', 'table', or 'incremental').
+          Can be overridden by materialization_overrides or materialization_mode settings.
+      - name: model_name
+        type: string
+        description: >
+          Optional model name (auto-detected from 'this.name' if not provided).
+      - name: partition_columns
+        type: list
+        description: >
+          List of columns to partition by for Hive tables (default ['billing_period']).
+          Only applies to incremental models with Hive table type. Iceberg tables don't use this.
+          Most models can use the default, but custom partitioning is available for specific needs.
+    return_type: dict
+    return_description: >
+      Dictionary of dbt configuration parameters including materialized, table_type,
+      partitioned_by, incremental_strategy, s3_data_naming, etc.
+
+  - name: get_model_time_filter
+    description: >
+      Time-based filtering for incremental models with validation
+
+      Generates SQL WHERE clause conditions to filter data based on billing periods. This macro is
+      the primary mechanism for controlling the time window of data processed during incremental runs.
+      It integrates with get_billing_period_range() to provide consistent date filtering across all models.
+
+      Supported Date Columns:
+      - `billing_period` (default) - String column in YYYY-MM format, most common for gold/silver cost models
+      - `line_item_usage_start_date` - Timestamp column, used for bronze layer source filtering
+
+      How It Works:
+
+      In full refresh mode (--full-refresh flag):
+      - Returns '1 = 1' (no filter, loads all available data)
+
+      In incremental mode (default):
+      - Queries get_billing_period_range() to determine start/end billing periods
+      - Applies time-based filtering using the specified date_column
+      - Default lookback: 6 months from current date (configurable)
+
+      Two Filtering Strategies:
+
+      1. For billing_period (string-based):
+         - Uses simple string comparison: `billing_period >= '2025-04' AND billing_period <= '2025-10'`
+         - Inclusive on both ends (includes both start and end months)
+
+      2. For line_item_usage_start_date (date function-based):
+         - Uses Athena date functions: `date_column >= date_parse('2025-04', '%Y-%m') AND date_column < date_add('month', 1, date_parse('2025-10', '%Y-%m'))`
+         - Inclusive start, exclusive end (includes all days through end of the last month)
+
+      Configuration Variables:
+
+      Control the time window using dbt variables:
+      - `billing_lookback_months` - Number of months to look back (default: 6)
+      - `billing_period_start` - Explicit start period override (format: YYYY-MM)
+      - `billing_period_end` - Explicit end period override (format: YYYY-MM)
+
+      Example: `dbt run --vars '{"billing_lookback_months": 12}'`
+
+      Usage Examples:
+
+      ```sql
+      -- Most common: filter on billing_period (default)
+      {% raw %}select * from {{ ref('source_model') }}
+      where {{ get_model_time_filter() }}{% endraw %}
+
+      -- Bronze models: filter on timestamp column
+      {% raw %}select * from {{ source('aws', 'cur') }}
+      where {{ get_model_time_filter(date_column='line_item_usage_start_date') }}{% endraw %}
+      ```
+
+      Validation & Security:
+      - SQL injection protection: Validates date_column against allowlist
+      - Format validation: Ensures YYYY-MM format for billing periods
+      - Range validation: Ensures start <= end dates
+      - Fails fast with clear error messages on invalid configurations
+
+      Important Notes:
+      - First run is treated as incremental (loads lookback period, not all history)
+      - Use --full-refresh flag to load complete historical data
+      - Same column should be used for both filtering and partitioning for optimal performance
+      - Early filtering at source minimizes data scanned and processing costs
+    arguments:
+      - name: date_column
+        type: string
+        description: >
+          The date/timestamp column to filter on (default 'billing_period').
+          Must be one of: 'billing_period', 'line_item_usage_start_date'.
+    return_type: string
+    return_description: >
+      SQL condition for WHERE clause to filter incremental data.
+      Example outputs:
+      - For billing_period: "billing_period >= '2025-04' AND billing_period <= '2025-10'"
+      - For line_item_usage_start_date: "line_item_usage_start_date >= date_parse('2025-04', '%Y-%m') AND line_item_usage_start_date < date_add('month', 1, date_parse('2025-10', '%Y-%m'))"

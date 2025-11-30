@@ -1,0 +1,74 @@
+version: 2
+
+macros:
+  - name: aws_mappings_athena_category
+    description: >
+      Categorizes Amazon Athena usage types for data analytics cost tracking.
+      Maps query execution, data scanned, and storage costs to business categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_quicksight_category
+    description: >
+      Categorizes AWS QuickSight usage types for business intelligence cost tracking.
+      Maps QuickSight user types, sessions, and data processing to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_glue_category
+    description: >
+      Categorizes AWS Glue usage types for ETL and data processing cost tracking.
+      Maps ETL jobs, crawlers, data catalog, and serverless compute to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_emr_category
+    description: >
+      Categorizes Amazon EMR (Elastic MapReduce) usage types for big data cost analysis.
+      Maps serverless compute, EKS integration, and different architectures to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_kinesis_category
+    description: >
+      Categorizes Amazon Kinesis usage types for streaming data cost tracking.
+      Maps provisioned streams, on-demand streams, and enhanced fan-out to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_kinesis_analytics_category
+    description: >
+      Categorizes Amazon Kinesis Analytics usage types for stream processing cost tracking.
+      Maps KPU hours, application storage, and backups to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_kinesis_firehose_category
+    description: >
+      Categorizes Amazon Kinesis Data Firehose usage types for data delivery cost tracking.
+      Maps data processing, format conversion, VPC delivery, and storage to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_msk_category
+    description: >
+      Categorizes Amazon MSK (Managed Streaming for Apache Kafka) usage types.
+      Maps provisioned clusters, serverless compute, and MSK Connect to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

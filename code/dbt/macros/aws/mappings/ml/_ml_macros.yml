@@ -1,0 +1,20 @@
+version: 2
+
+macros:
+  - name: aws_mappings_sagemaker_category
+    description: >
+      Categorizes Amazon SageMaker usage types for machine learning cost analysis.
+      Maps training, hosting, studio, and feature store costs to business categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_bedrock_category
+    description: >
+      Categorizes Amazon Bedrock usage types for generative AI cost tracking.
+      Maps text models, image generation, embeddings, and guardrails to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

@@ -1,0 +1,127 @@
+version: 2
+
+macros:
+  - name: aws_mappings_instance_normalization_factor
+    description: >
+      Calculates normalization factor for EC2 instance sizes to enable cost comparison across instance types.
+      Maps AWS EC2 instance sizes and families to normalization factors for capacity calculations.
+      Returns numeric normalization factors used to compare compute capacity across different instance types.
+      Essential for rightsizing analysis and capacity planning. Returns 0 for unknown instance types.
+    arguments:
+      - name: instance_size_col
+        type: string
+        description: Column reference for instance size (default 'instance_size')
+      - name: instance_type_family_col
+        type: string
+        description: Column reference for instance type family (default 'instance_type_family')
+    returns:
+      type: numeric
+      description: Numeric normalization factor
+
+  - name: aws_mappings_operating_system
+    description: >
+      Maps AWS EC2 operation codes to readable operating system names.
+      Maps AWS operation codes to standardized operating system names for EC2 instances.
+      Transforms AWS-specific operation codes into human-readable OS names for better reporting and analysis.
+      Handles various Linux distributions, Windows versions, and other operating systems.
+    arguments:
+      - name: operation_col
+        type: string
+        description: Column reference for operation code (default 'operation')
+      - name: operating_system_col
+        type: string
+        description: Column reference for operating system (default 'operating_system')
+    returns:
+      type: string
+      description: Operating system name string
+
+  - name: aws_mappings_batch_category
+    description: >
+      Batch categorization for AWS Batch service.
+      Provides compute/management classification for batch processing workloads.
+    arguments:
+      - name: service_code_col
+        type: string
+        description: Column reference for AWS service code.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_ec2_category
+    description: >
+      EC2 categorization macro for Amazon Elastic Compute Cloud.
+      Provides compute/network/storage/management classification specifically for EC2 resources.
+    arguments:
+      - name: service_code_col
+        type: string
+        description: Column reference for AWS service code.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+      - name: instance_type_family_col
+        type: string
+        description: Column reference for EC2 instance type family.
+      - name: purchase_option_col
+        type: string
+        description: Column reference for EC2 purchase option.
+
+  - name: aws_mappings_lambda_category
+    description: >
+      Categorizes AWS Lambda usage types into specific Lambda service categories.
+      Categorizes AWS Lambda usage types for serverless cost analysis.
+      Maps Lambda execution, memory, and request patterns to business-friendly categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for usage type (default 'usage_type')
+    returns:
+      type: string
+      description: Lambda category string
+
+  - name: aws_mappings_outposts_category
+    description: >
+      Outposts categorization for Amazon Outposts.
+      Provides compute/storage classification for on-premises AWS infrastructure.
+    arguments:
+      - name: service_code_col
+        type: string
+        description: Column reference for AWS service code.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_dax_category
+    description: >
+      Categorizes Amazon DAX usage types for DynamoDB acceleration cost tracking.
+      Maps DAX node instances (memory optimized and burstable) to compute categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_ecr_category
+    description: >
+      Categorizes Amazon ECR (Elastic Container Registry) usage types for container registry cost tracking.
+      Maps container storage and data transfer patterns to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_ecs_category
+    description: >
+      Categorizes Amazon ECS usage types for container cost tracking.
+      Maps Fargate compute, EC2 launch type, Container Insights, and data transfer to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_eks_category
+    description: >
+      Categorizes Amazon EKS usage types for Kubernetes cost tracking.
+      Maps cluster management, Fargate compute, EKS Auto, and data transfer to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

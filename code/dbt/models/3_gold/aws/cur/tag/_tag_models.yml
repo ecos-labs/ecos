@@ -1,0 +1,297 @@
+version: 2
+models:
+- name: gold_tag__tag_cost_daily
+  description: |
+    Daily aggregation of costs and resources by tag key-value pairs. This foundation model unpivots
+    the resource_tags MAP column into individual tag key-value rows, enabling downstream monthly
+    aggregations while avoiding repeated tag extraction.
+
+    ## Purpose & Architecture
+    - **Foundation Layer**: Pre-aggregates costs at daily granularity for efficient monthly rollups
+    - **Tag Unpivoting**: Converts resource_tags MAP into normalized tag_key/tag_value columns
+    - **Performance**: Reduces data volume for downstream models by 30-365x vs processing raw CUR
+    - **Materialization**: Incremental table (partitioned by billing_period) for efficiency
+
+    ## Tag Key Selection
+    Tag filtering happens exclusively at this level - all downstream models automatically use whatever
+    tags are present in this model.
+
+    **Auto-discovery (default)**: If `tag_keys` variable is not provided, discovers all tag keys
+    present in your resource_tags MAP column. Ideal for exploring all available tags.
+
+    **Manual selection**: Use `tag_keys` variable to filter to specific tags. Improves performance
+    by reducing data volume and processing scope.
+
+    ## Usage Examples
+
+    **Include all tag keys**:
+    ```
+    dbt run -s gold_tag__tag_cost_daily
+    ```
+
+    **Filter to specific tag keys** (only environment and team tags):
+    ```
+    dbt run -s gold_tag__tag_cost_daily --vars '{tag_keys: ["environment", "team"]}'
+    ```
+
+    **Combine with monthly models**:
+    ```
+    # Set tags at daily level
+    dbt run -s gold_tag__tag_cost_daily --vars '{tag_keys: ["environment", "team", "cost-center"]}'
+    # Monthly models automatically use these filtered tags
+    dbt run -s gold_tag__tag_key_coverage_monthly
+    dbt run -s gold_tag__tag_cost_monthly
+    ```
+
+    ## Configuration Variable
+    - **tag_keys** (optional list): Array of specific tag keys to include
+      - Example: `--vars '{tag_keys: ["environment", "team", "owner"]}'`
+      - Default: `[]` (empty list triggers auto-discovery of all tags)
+
+    ## Downstream Dependencies
+    - `gold_tag__coverage_summary_monthly` - Monthly coverage metrics
+    - `gold_tag__tag_cost_monthly` - Monthly cost detail by tag values
+
+    ## Source Model
+    - `silver_aws__cur_enhanced` - Silver layer CUR data with resource_tags MAP
+  columns:
+  - name: usage_date
+    description: Date of usage (daily grain).
+    data_type: date
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: tag_key
+    description: The tag key (e.g., 'environment', 'team', 'cost-center').
+    data_type: varchar
+  - name: tag_value
+    description: The tag value (e.g., 'prod', 'dev', 'staging'). NULL indicates resources without this tag key.
+    data_type: varchar
+  - name: count_resource
+    description: Number of distinct resources with this tag key-value combination on this day.
+    data_type: bigint
+  - name: total_effective_cost
+    description: Total effective cost for resources with this tag key-value combination on this day.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format).
+    data_type: varchar
+
+- name: gold_tag__tag_key_coverage_monthly
+  description: |
+    Monthly tag coverage metrics showing what percentage of costs and resources are tagged per tag key.
+    Aggregates daily tag metrics to monthly level with coverage analysis. Sources from
+    `gold_tag__tag_cost_daily` for performance and consistency.
+
+    ## Purpose
+    Answers key tagging governance questions:
+    - What % of costs in my account/service have the environment tag?
+    - What % of costs have the team tag?
+    - How is tagging coverage trending month-over-month?
+    - Are critical tags being applied to resources?
+
+    ## Tag Key Selection
+    Tag keys are configured exclusively in the daily model (`gold_tag__tag_cost_daily`) via the
+    `tag_keys` variable. This model automatically aggregates all tags present in the daily model.
+    To filter to specific tags, set the variable when running the daily model (see gold_tag__tag_cost_daily
+    documentation for examples).
+
+    ## Metric Definitions
+
+    **avg_daily_resources**: Average number of distinct resources across all days in the month.
+    - Note: NOT the total distinct resources for the entire month
+    - Use when you need typical daily resource count
+    - Example: 100 resources day 1, 50 resources day 30 → avg = 75
+
+    **tagged_resource_days**: Sum of daily resource counts that have a value for this tag key.
+    - Represents "resource-days" with the tag applied
+    - Use when you need to understand overall tagging volume
+
+    **percentage_cost_tagged / percentage_effective_cost_tagged**:
+    - Percentage of total monthly costs from resources with this tag key
+    - Most useful metric for understanding cost coverage by tag
+
+    **total_effective_cost**: Total cost for all resources in this grouping
+
+    **tagged_effective_cost**: Cost of resources that have this tag key
+
+    ## Usage Examples
+
+    **See all tag coverage metrics**:
+    ```
+    select * from gold_tag__tag_key_coverage_monthly
+    where usage_date >= '2025-01-01'
+    ```
+
+    **Find tag coverage by service**:
+    ```
+    select service_code, tag_key, percentage_cost_tagged
+    from gold_tag__tag_key_coverage_monthly
+    where usage_date = '2025-11-01'
+    order by service_code, percentage_cost_tagged
+    ```
+
+    **Track coverage trends**:
+    ```
+    select usage_date, tag_key, percentage_cost_tagged
+    from gold_tag__tag_key_coverage_monthly
+    where account_id = '123456789'
+      and tag_key = 'environment'
+    order by usage_date
+    ```
+
+    ## When to Use
+    - Governance reporting: Track tagging compliance over time
+    - Coverage analysis: Identify which services/accounts have poor tagging
+    - Trend analysis: Monitor month-over-month changes in tag coverage
+    - Audit reports: Document what % of costs are properly tagged
+
+    ## Source Model
+    - `gold_tag__tag_cost_daily` - Daily tag metrics (depends on tag selection)
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: date
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: tag_key
+    description: The tag key being analyzed (e.g., 'environment', 'team', 'cost-center').
+    data_type: varchar
+  - name: avg_daily_resources
+    description: Average number of distinct resources with this tag key across all days in the month.
+    data_type: decimal
+  - name: tagged_resource_days
+    description: Sum of daily distinct resource counts for this tag key with non-empty values.
+    data_type: bigint
+  - name: percentage_cost_tagged
+    description: Percentage of total monthly cost from resources that have a value for this tag key.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for all resources in this group for the month.
+    data_type: decimal
+  - name: tagged_effective_cost
+    description: Effective cost of resources that have a value for this tag key.
+    data_type: decimal
+  - name: percentage_effective_cost_tagged
+    description: Percentage of total monthly cost from resources with this tag key (duplicate metric for clarity).
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format).
+    data_type: varchar
+
+- name: gold_tag__tag_cost_monthly
+  description: |
+    Monthly tag cost detail showing resources and costs broken down by tag key-value combinations.
+    Provides granular visibility into which tag values drive costs and resource usage. Sources from
+    `gold_tag__tag_cost_daily` for performance and consistency.
+
+    ## Purpose
+    Enables detailed cost analysis by tag values:
+    - How much do production vs staging vs development environments cost?
+    - Which teams are consuming the most resources?
+    - How is cost distributed across different cost-center values?
+    - Which tag values are driving cloud spend?
+
+    ## Tag Key Selection
+    Tag keys are configured exclusively in the daily model (`gold_tag__tag_cost_daily`) via the
+    `tag_keys` variable. This model automatically includes all tag key-value pairs present in the daily model.
+    To filter to specific tags, set the variable when running the daily model (see gold_tag__tag_cost_daily
+    documentation for examples).
+
+    ## Metric Definitions
+
+    **avg_daily_resources**: Average number of distinct resources with this tag key-value combination
+    across all days in the month.
+    - Note: NOT the total distinct resources for the entire month
+    - Use to understand typical daily resource count per tag value
+    - Example: prod=500, staging=100, dev=50 (averages)
+
+    **total_effective_cost**: Total effective cost for resources with this specific tag key-value pair
+    for the entire month.
+    - Most important metric for cost breakdown
+    - Use for chargeback and cost allocation
+
+    **tag_value = NULL**: Indicates resources that don't have this particular tag key applied
+    - Helps identify untagged resources
+    - Use to find gaps in tagging coverage
+
+    ## Usage Examples
+
+    **Cost breakdown by environment**:
+    ```
+    select tag_key, tag_value, total_effective_cost
+    from gold_tag__tag_cost_monthly
+    where usage_date = '2025-11-01'
+      and tag_key = 'environment'
+    order by total_effective_cost desc
+    ```
+
+    **Find top cost-driving tag values**:
+    ```
+    select tag_key, tag_value, total_effective_cost
+    from gold_tag__tag_cost_monthly
+    where usage_date = '2025-11-01'
+    order by total_effective_cost desc
+    limit 20
+    ```
+
+    **Team cost allocation**:
+    ```
+    select tag_value as team, sum(total_effective_cost) as team_cost
+    from gold_tag__tag_cost_monthly
+    where usage_date = '2025-11-01'
+      and tag_key = 'team'
+    group by tag_value
+    order by team_cost desc
+    ```
+
+    **Identify untagged resources by service**:
+    ```
+    select service_code, tag_key, total_effective_cost as untagged_cost
+    from gold_tag__tag_cost_monthly
+    where usage_date = '2025-11-01'
+      and tag_value is null
+    order by untagged_cost desc
+    ```
+
+    ## When to Use
+    - Cost allocation: Chargeback to teams/departments/projects
+    - Detailed analysis: Drill-down to see specific tag value costs
+    - Chargeback reports: Bill teams based on their tag values
+    - Optimization: Identify which tag values consume most resources
+    - Gap analysis: Find untagged resources (where tag_value is null)
+
+    ## Source Model
+    - `gold_tag__tag_cost_daily` - Daily tag metrics (depends on tag selection)
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: date
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: tag_key
+    description: The tag key (e.g., 'environment', 'team', 'cost-center').
+    data_type: varchar
+  - name: tag_value
+    description: The tag value (e.g., 'prod', 'staging', 'dev'). NULL indicates resources without this tag key.
+    data_type: varchar
+  - name: avg_daily_resources
+    description: Average number of distinct resources with this tag key-value combination across all days in the month.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for resources with this tag key-value combination for the month.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format).
+    data_type: varchar

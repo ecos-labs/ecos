@@ -1,0 +1,315 @@
+version: 2
+models:
+- name: gold_other__api_gateway_daily
+  description: |
+    Daily aggregation of AWS API Gateway usage and costs, providing visibility into API consumption patterns and cost drivers.
+    Sources data from silver_aws__cur_enhanced filtered to AmazonApiGateway service with running usage charges only.
+
+    Key Features:
+    - Categorizes usage into actionable types: Requests, Data Transfer, Messages, Minutes, Cache Usage
+    - Tracks costs at the individual API Gateway resource level
+    - Filters to cost-bearing line items only (effective_cost > 0)
+    - Daily grain enables anomaly detection and trend analysis
+
+    Use Cases:
+    - Identify high-traffic APIs driving request costs
+    - Monitor data transfer costs by API endpoint
+    - Detect unusual API usage patterns day-over-day
+    - Allocate API Gateway costs to specific applications or teams
+  columns:
+  - name: usage_date
+    description: Date of usage aggregated to daily grain. All costs for a given API and category on this date are summed.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier where the API Gateway is deployed.
+    data_type: varchar
+  - name: resource_id
+    description: Full ARN of the API Gateway resource for precise identification.
+    data_type: varchar
+  - name: api_gateway_id
+    description: API Gateway identifier extracted from resource_name, typically the API ID or stage name.
+    data_type: varchar
+  - name: usage_category
+    description: Standardized usage category derived from usage_type patterns. Values include Requests (API calls), Data Transfer (outbound data), Messages (WebSocket), Minutes (connection time), Cache Usage (caching), or Other.
+    data_type: varchar
+  - name: usage_type
+    description: Raw AWS usage type for detailed analysis (e.g., ApiGatewayRequest, DataTransfer-Out-Bytes).
+    data_type: varchar
+  - name: total_usage_amount
+    description: Sum of usage quantity for the day, measured in category-specific units (requests, GB, messages, or minutes).
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for this API Gateway and category on this day, accounting for discounts and credits.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_other__cloudwatch_monthly
+  description: |
+    Monthly aggregation of Amazon CloudWatch costs by log group and usage category, enabling cost optimization of monitoring infrastructure.
+    Sources data from silver_aws__cur_enhanced filtered to AmazonCloudWatch service with positive effective costs.
+
+    Key Features:
+    - Categorizes CloudWatch usage via aws_mappings_cloudwatch_category macro (Logs, Metrics, Alarms, Dashboards, etc.)
+    - Tracks costs at the log group level for granular attribution
+    - Regional breakdown for multi-region monitoring analysis
+    - Monthly grain aligns with typical CloudWatch billing cycles
+
+    Use Cases:
+    - Identify expensive log groups driving CloudWatch Logs costs
+    - Compare metrics vs logs cost distribution
+    - Detect log groups with excessive ingestion or retention costs
+    - Plan log retention policy changes based on cost impact
+
+    Important Notes:
+    - Log group name may be NULL for non-log CloudWatch features (metrics, alarms, dashboards)
+    - Consider log retention periods when analyzing log ingestion costs
+  columns:
+  - name: usage_date
+    description: First day of the month for aggregation. All CloudWatch costs for the month are rolled up to this date.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier where CloudWatch resources are deployed.
+    data_type: varchar
+  - name: log_group_name
+    description: CloudWatch Logs log group name when applicable. NULL for non-log features like metrics, alarms, or dashboards.
+    data_type: varchar
+  - name: usage_category
+    description: Standardized CloudWatch usage category from aws_mappings_cloudwatch_category macro. Common values include Logs Ingestion, Logs Storage, Metrics, Alarms, Dashboards, and Insights Queries.
+    data_type: varchar
+  - name: region_id
+    description: AWS region where CloudWatch resources are deployed (e.g., us-east-1, eu-west-1, global for cross-region features).
+    data_type: varchar
+  - name: total_usage_amount
+    description: Sum of usage quantity for the month, measured in category-specific units (GB for logs, metrics count, alarm count, etc.).
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for this log group/category combination for the month, accounting for discounts and credits.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_other__config_daily
+  description: |
+    Daily aggregation of AWS Config service costs by usage category and region, enabling compliance monitoring cost optimization.
+    Sources data from silver_aws__cost_daily filtered to AWS Config service with running usage charges.
+
+    Key Features:
+    - Categorizes Config usage into: Config Items Recorded, Config Items Recorded Daily, Config Rule Evaluations, Conformance Pack Evaluations
+    - Regional breakdown for multi-region Config deployments
+    - Daily grain enables identification of configuration change spikes
+    - Aggregates from pre-aggregated daily source for efficiency
+
+    Use Cases:
+    - Monitor Config rule evaluation costs across accounts
+    - Identify regions with excessive configuration item recording
+    - Detect conformance pack cost spikes from new deployments
+    - Optimize Config recorder settings based on cost patterns
+
+    Important Notes:
+    - Config Items Recorded Daily uses a different pricing model than standard recording
+    - Conformance Pack evaluations can scale significantly with resource count
+  columns:
+  - name: usage_date
+    description: Date of usage aggregated to daily grain. All Config costs for this date are summed by category and region.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier where AWS Config is enabled.
+    data_type: varchar
+  - name: region_id
+    description: AWS region where Config is recording resources (e.g., us-east-1, eu-west-1). Config runs per-region.
+    data_type: varchar
+  - name: usage_category
+    description: Standardized Config usage category. Values include Config Items Recorded (standard), Config Items Recorded Daily (periodic), Config Rule Evaluations, Conformance Pack Evaluations, or Others.
+    data_type: varchar
+  - name: total_usage_amount
+    description: Sum of usage quantity for the day, measured in category-specific units (configuration items or rule evaluations count).
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for this category and region on this day, accounting for discounts and credits.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_other__kinesis_optimization_monthly
+  description: |
+    Monthly analysis identifying potentially idle or underutilized Amazon Kinesis resources for cost optimization.
+    Helps identify Kinesis Data Streams that may be candidates for deletion or consolidation based on usage patterns.
+
+    Eligibility Criteria:
+    - AmazonKinesis service with Usage charge type
+    - Excludes OnDemand-BilledOutgoingEFOBytes (enhanced fan-out)
+    - Excludes Extended-ShardHour usage types
+    - Only includes resources with a single pricing unit per billing period
+
+    Key Features:
+    - Identifies streams with simple usage patterns (single pricing unit) that may indicate underutilization
+    - Monthly aggregation provides stable view of stream activity
+    - Resource-level granularity for actionable recommendations
+    - Tracks both usage quantity and cost for ROI analysis
+
+    Business Logic:
+    - pricing_unit_count filter: Only returns resources where pricing_unit_count = 1
+    - This identifies streams with minimal usage complexity, potential idle stream candidates
+    - Resources with multiple pricing units are actively used across different dimensions
+
+    Use Cases:
+    - Identify idle Kinesis Data Streams for deletion
+    - Find underutilized streams for consolidation
+    - Audit Kinesis spend by resource and account
+    - Plan stream cleanup initiatives with cost impact estimates
+
+    Important Notes:
+    - Single pricing unit does not guarantee a stream is idle - verify with application teams
+    - Enhanced fan-out consumers are excluded to focus on base stream costs
+    - Consider data retention requirements before deleting streams
+  columns:
+  - name: usage_date
+    description: First day of the month for aggregation. All Kinesis costs for the month are rolled up to this date.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier where the Kinesis resource is deployed.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer (management) account identifier for consolidated billing context.
+    data_type: varchar
+  - name: resource_id
+    description: Full ARN of the Kinesis resource (stream, delivery stream, or analytics application).
+    data_type: varchar
+  - name: region_id
+    description: AWS region where the Kinesis resource is deployed (e.g., us-east-1, eu-west-1).
+    data_type: varchar
+  - name: pricing_unit
+    description: AWS pricing unit for this usage (e.g., Shard-Hour, PUT Payload Units, GB). Single pricing unit per resource indicates potential underutilization.
+    data_type: varchar
+  - name: total_usage_amount
+    description: Sum of usage quantity for the month in the specified pricing unit.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for this Kinesis resource for the month, accounting for discounts and credits.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_other__extended_support_monthly
+  description: |
+    Monthly tracking of AWS extended support fees for EKS and RDS services, enabling upgrade planning and cost impact analysis.
+    Extended support charges apply when running end-of-life Kubernetes versions (EKS) or database engine versions (RDS).
+
+    Key Features:
+    - Separates EKS and RDS extended support fees for targeted analysis
+    - Categorizes RDS extended support by year tier (Year 1-2 vs Year 3+ with higher rates)
+    - Extracts database engine (Aurora MySQL, Aurora PostgreSQL, MySQL, PostgreSQL, Oracle, SQL Server)
+    - Parses database version from usage_type for upgrade planning
+    - Monthly aggregation enables trend analysis as versions age
+
+    Business Logic:
+    - Support type classification based on service_code and usage_type patterns
+    - RDS tiered pricing: Year 1-2 (lower rate) vs Year 3+ (higher rate)
+    - Database engine extracted via pattern matching on usage_type
+    - Database version extracted via regex from usage_type string
+
+    Use Cases:
+    - Identify EKS clusters needing Kubernetes version upgrades
+    - Track RDS instances approaching Year 3+ higher support rates
+    - Plan database engine upgrades based on extended support costs
+    - Forecast extended support cost growth as versions age
+    - Prioritize upgrade projects by cost impact
+
+    Important Notes:
+    - Extended support fees are in addition to regular instance costs
+    - RDS Year 3+ rates are significantly higher than Year 1-2
+    - Upgrading to supported versions eliminates these fees entirely
+    - EKS extended support starts when Kubernetes version reaches end of standard support
+  columns:
+  - name: usage_date
+    description: First day of the month for aggregation. All extended support costs for the month are rolled up to this date.
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer (management) account identifier for consolidated billing context.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier where the EKS cluster or RDS instance is deployed.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code (AmazonEKS or AmazonRDS).
+    data_type: varchar
+  - name: service_name
+    description: Human-readable AWS service name (Amazon Elastic Kubernetes Service or Amazon RDS).
+    data_type: varchar
+  - name: region_id
+    description: AWS region where the resource is deployed (e.g., us-east-1, eu-west-1).
+    data_type: varchar
+  - name: resource_name
+    description: Name of the EKS cluster or RDS instance/cluster incurring extended support fees.
+    data_type: varchar
+  - name: support_type
+    description: Extended support tier classification. Values are EKS Extended Support, RDS Extended Support Year 1-2, RDS Extended Support Year 3+, or RDS Extended Support (unclassified tier).
+    data_type: varchar
+  - name: database_engine_version
+    description: Database engine and version combination for RDS (e.g., "Aurora MySQL 5.7", "PostgreSQL 11"). Returns "none" for EKS or when version cannot be parsed.
+    data_type: varchar
+  - name: total_usage_hours
+    description: Total hours of extended support usage for the month. Multiply by hourly rate for cost verification.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for extended support fees this month, accounting for any discounts or credits.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_other__support_cost_chargeback_monthly
+  description: |
+    Monthly allocation of AWS Support plan costs across linked accounts using proportional cost-based chargeback.
+    Enables fair distribution of shared AWS Support fees (Business, Enterprise) to accounts based on their usage share.
+
+    Key Features:
+    - Proportional allocation based on each account's share of total non-support costs
+    - Calculates both allocated cost and percentage contribution
+    - Excludes taxes from allocation calculations
+    - Monthly grain aligns with AWS Support billing cycle
+
+    Business Logic:
+    - base_effective_cost: Sum of all non-support service costs (excludes OCBPremiumSupport, AWSSupportEnterprise)
+    - support_effective_cost: Sum of AWS Support charges (OCBPremiumSupport, AWSSupportEnterprise)
+    - Allocation formula: support_cost × (account_cost / total_base_cost)
+    - Percentage formula: (account_cost / total_base_cost) × 100
+
+    Allocation Method:
+    - This model uses proportional cost allocation (spend-based)
+    - Accounts with higher AWS spend receive proportionally higher support cost allocation
+    - Alternative methods (equal split, headcount-based) require custom modification
+
+    Use Cases:
+    - Chargeback AWS Support costs to business units or cost centers
+    - Show teams their "fair share" of Enterprise Support fees
+    - Build internal invoicing for shared AWS services
+    - Analyze support cost burden across account portfolio
+
+    Important Notes:
+    - Support plans are charged at the organization level, not per-account
+    - Accounts with zero or negative costs receive zero support allocation
+    - Tax charges are excluded from both base cost and allocation calculations
+    - Consider whether proportional allocation is appropriate for your organization
+  columns:
+  - name: usage_date
+    description: First day of the month for aggregation. All costs for the month are rolled up to this date.
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer (management) account identifier that owns the AWS Support plan.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier receiving the support cost allocation.
+    data_type: varchar
+  - name: account_effective_cost
+    description: Total effective cost for this account for the month, excluding support and tax charges. Used as the basis for proportional allocation.
+    data_type: decimal
+  - name: allocated_support_effective_cost
+    description: AWS Support cost allocated to this account based on its proportional share of total organization spend. Calculated as support_cost × (account_cost / total_base_cost).
+    data_type: decimal
+  - name: effective_cost_percentage
+    description: This account's percentage share of total organization spend (0-100), used for allocation calculation. Sum across all accounts equals 100%.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar

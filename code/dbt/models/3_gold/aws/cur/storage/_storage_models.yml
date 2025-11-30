@@ -1,0 +1,519 @@
+version: 2
+models:
+- name: gold_storage__ebs_summary_monthly
+  description: |
+    Monthly analysis of EBS volume resources with optimization insights including gp2 to gp3 migration savings potential.
+    Provides detailed resource-level analysis for EBS volumes including utilization, performance, and cost optimization opportunities.
+    Calculates estimated cost savings for modernizing gp2 volumes to gp3 (up to 20% cost savings).
+
+    Key Features:
+    - Volume type classification (gp2, gp3, io1, io2, st1, sc1, magnetic, snapshot)
+    - gp2 to gp3 migration savings calculation
+    - Storage size categorization (Small, Medium, Large, Very Large)
+    - IOPS and throughput cost breakdown
+    - Lifecycle tracking (first_seen, last_seen dates)
+
+    gp2 to gp3 Migration Benefits:
+    - Cost savings: Up to 20% reduction in storage costs
+    - Performance control: Independently provision IOPS and throughput
+    - Better price-performance ratio for most workloads
+    - Same baseline performance (3 IOPS/GB up to 16,000 IOPS)
+
+    Cost Components:
+    - cost_storage: Storage capacity cost (GB-month)
+    - cost_iops: Provisioned IOPS cost
+    - cost_throughput: Provisioned throughput cost (GiB/s)
+    - gp2_to_gp3_savings_potential: Estimated monthly savings from migration
+
+    Savings Calculation Assumptions:
+    - Assumes max IOPS and throughput provisioning based on volume size
+    - Not all volumes require maximum performance levels
+    - Requires validation by resource owner for actual requirements
+    - Savings vary based on specific IOPS/throughput needs
+
+    Use Cases:
+    - Identify gp2 volumes for gp3 migration
+    - Calculate organization-wide EBS optimization potential
+    - Track volume lifecycle and usage patterns
+    - Optimize storage costs through volume type selection
+
+    Important Notes:
+    - Review actual IOPS/throughput requirements before migration
+    - Test performance after migration to ensure application needs are met
+    - Consider provisioned IOPS costs when upgrading to gp3
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: volume_name
+    description: EBS volume name.
+    data_type: varchar
+  - name: volume_type
+    description: EBS volume type (gp2, gp3, io1, io2, st1, sc1, magnetic, snapshot).
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for all EBS resources for the month.
+    data_type: double
+  - name: cost_storage
+    description: Cost for storage.
+    data_type: double
+  - name: storage_summary
+    description: Storage size categorization (Small, Medium, Large, Very Large).
+    data_type: varchar
+  - name: usage_storage_gb_month
+    description: Storage usage in GB for the month.
+    data_type: double
+  - name: unit_cost_storage_gb_month
+    description: Unit cost per GB per month.
+    data_type: double
+  - name: cost_iops
+    description: Cost for IOPS.
+    data_type: double
+  - name: usage_iops_month
+    description: IOPS usage for the month.
+    data_type: double
+  - name: cost_throughput
+    description: Cost for throughput.
+    data_type: double
+  - name: usage_throughput_gibps_month
+    description: Usage throughput in GiB/s for the month.
+    data_type: double
+  - name: gp2_to_gp3_savings_potential
+    description: Potential savings with gp3 migration.
+    data_type: double
+  - name: first_seen
+    description: First seen date.
+    data_type: date
+  - name: last_seen
+    description: Last seen date.
+    data_type: date
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_storage__ebs_snapshot_current
+  description: |
+    Analysis of currently active EBS snapshots sourced from monthly summary data.
+    Identifies all active snapshots with cost tracking and lifecycle details for optimization purposes.
+    Calculates snapshot age (in days) to help identify long-running snapshots for review.
+
+    Key Features:
+    - Active status: Must exist within last 5 days to be considered current
+    - Dual cost tracking: Previous month cost + cumulative total cost
+    - Age calculation: Days between first and last seen dates (for reference, not filtered)
+    - First/last seen dates for lifecycle tracking
+    - Sorted by previous month cost DESC for prioritization
+
+    Cost Calculation:
+    - Previous month cost: Snapshot storage cost for last billing period
+    - Total cost: Cumulative cost since snapshot first appeared in CUR data
+    - Note: Total cost depends on earliest snapshot data available in CUR dataset
+
+    Filtering Logic:
+    - Product: AmazonEC2
+    - Usage type: Contains 'SnapshotUsage'
+    - Lookback period: Last 12 months of snapshot data
+    - Active: MAX(usage_start_date) >= CURRENT_DATE - 5 days
+    - Age: Calculated as date_diff between first_seen and last_seen (not filtered)
+
+    Use Cases:
+    - Identify aged snapshots for lifecycle policy review
+    - Calculate cost savings potential from snapshot deletion
+    - Audit snapshot retention compliance
+    - Prioritize cleanup efforts by monthly cost impact
+    - Sort by age_in_days column to find oldest snapshots
+
+    Optimization Recommendations:
+    - Review snapshots with high age_in_days for business need (e.g., > 90 days)
+    - Implement automated lifecycle policies
+    - Consider snapshot consolidation strategies
+    - Evaluate AMI creation from snapshots as alternative
+
+    Important Notes:
+    - No automatic age filtering is applied - all active snapshots are returned
+    - Use age_in_days column to filter results based on your retention policy
+    - 90-day threshold is a common industry best practice but not enforced in this model
+  columns:
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: volume_name
+    description: Associated volume name.
+    data_type: varchar
+  - name: first_seen
+    description: First seen date.
+    data_type: date
+  - name: last_seen
+    description: Last seen date.
+    data_type: date
+  - name: age_in_days
+    description: Age of snapshot in days.
+    data_type: integer
+  - name: total_effective_cost_previous_month
+    description: Total effective cost for the previous month.
+    data_type: double
+  - name: total_effective_cost
+    description: Total effective cost for the snapshot across all periods.
+    data_type: double
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_storage__ebs_details_daily
+  description: |
+    Daily aggregation of EBS storage costs by volume and usage category, enabling granular cost tracking and anomaly detection.
+    Sources data from silver_aws__cur_enhanced filtered to AmazonEC2 EBS usage types.
+
+    Key Features:
+    - Categorizes EBS usage via aws_mappings_ebs_category macro (Storage, IOPS, Throughput, Snapshot, etc.)
+    - Volume-level granularity for cost attribution
+    - Regional breakdown for multi-region deployments
+    - Daily grain enables cost spike detection and trend analysis
+
+    Use Cases:
+    - Track daily EBS costs per volume for chargeback
+    - Detect cost anomalies from unexpected IOPS or throughput charges
+    - Monitor snapshot storage costs over time
+    - Feed data into monthly summary models for optimization analysis
+  columns:
+  - name: usage_date
+    description: Date of usage aggregated to daily grain. All EBS costs for a given volume and category are summed.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier where the EBS volume is deployed.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer (management) account identifier for consolidated billing context.
+    data_type: varchar
+  - name: volume_name
+    description: EBS volume name extracted from resource_name. Identifies the specific volume for cost attribution.
+    data_type: varchar
+  - name: usage_category
+    description: Standardized EBS usage category from aws_mappings_ebs_category macro. Values include Storage, IOPS, Throughput, Snapshot, Fast Snapshot Restore, and others.
+    data_type: varchar
+  - name: region_id
+    description: AWS region where the EBS volume is deployed (e.g., us-east-1, eu-west-1).
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for this volume and category on this day, accounting for discounts and credits.
+    data_type: decimal
+  - name: total_usage_amount
+    description: Sum of usage quantity for the day, measured in category-specific units (GB-month for storage, IOPS-month for provisioned IOPS).
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_storage__s3_details_daily
+  description: |
+    Daily aggregation of S3 storage costs by bucket and usage category, enabling granular cost tracking and anomaly detection.
+    Sources data from silver_aws__cur_enhanced filtered to AmazonS3, AmazonGlacier, and AmazonS3GlacierDeepArchive services.
+
+    Key Features:
+    - Categorizes S3 usage via aws_mappings_s3_category macro (Storage, Requests, Data Transfer, etc.)
+    - Bucket-level granularity for cost attribution and chargeback
+    - Regional breakdown for multi-region deployments
+    - Filters to positive effective costs only for cleaner analysis
+
+    Use Cases:
+    - Track daily S3 costs per bucket for team/project chargeback
+    - Detect request cost spikes from increased API activity
+    - Monitor data transfer costs for egress optimization
+    - Feed data into gold_storage__s3_summary_monthly for lifecycle optimization analysis
+
+    Important Notes:
+    - Includes all storage classes (Standard, IA, Glacier, Deep Archive)
+    - Request costs can spike with high API activity - use for monitoring
+    - Data transfer costs include cross-region and internet egress
+  columns:
+  - name: usage_date
+    description: Date of usage aggregated to daily grain. All S3 costs for a given bucket and category are summed.
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer (management) account identifier for consolidated billing context.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier where the S3 bucket is owned.
+    data_type: varchar
+  - name: bucket_name
+    description: S3 bucket name extracted from resource_name. Identifies the specific bucket for cost attribution.
+    data_type: varchar
+  - name: usage_category
+    description: Standardized S3 usage category from aws_mappings_s3_category macro. Values include Standard Storage, IA Storage, Glacier Storage, Tier1 Requests, Tier2 Requests, Data Transfer, Retrieval, and others.
+    data_type: varchar
+  - name: region_id
+    description: AWS region where the S3 bucket is located (e.g., us-east-1, eu-west-1).
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for this bucket and category on this day, accounting for discounts and credits.
+    data_type: decimal
+  - name: total_usage_amount
+    description: Sum of usage quantity for the day, measured in category-specific units (GB for storage, count for requests, GB for data transfer).
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_storage__s3_summary_monthly
+  description: |
+    Monthly summary of S3 bucket storage metrics and optimization insights from the last 12 months.
+    Provides comprehensive analysis of S3 storage classes, access patterns, cost optimization opportunities, and savings potential.
+    Sourced from gold_storage__s3_details_daily with effective_cost metrics and usage_category mappings for improved cost tracking.
+
+    Optimization Checks Performed:
+    1. Inactive Standard Storage: Identifies buckets using only S3 Standard with no active requests
+    2. Incomplete Multipart Uploads: Detects > 100 incomplete MPU (delta between initiated and completed)
+    3. Early Delete Waste: Flags buckets with early delete costs exceeding $10
+    4. Storage Class Transition Opportunities: Calculates savings from Standard -> IA -> Glacier IR migrations
+
+    Savings Calculation Methodology:
+    - Standard to Standard-IA: Assumes 30% storage savings (adjustable)
+    - Standard-IA to Glacier Instant Retrieval:
+      * Storage: 68% savings
+      * Tier1 Requests: 2x cost increase (PUT, COPY, POST, LIST)
+      * Tier2 Requests: 10x cost increase (GET and all other)
+      * Retrieval: 3x cost increase
+    - All assumptions are configurable based on organization preferences
+
+    Activity Tracking:
+    - recent_request_date: Most recent active request (PutObject, PutObjectForRepl, GetObject, CopyObject)
+    - Underutilization period: Configurable threshold for "inactive" classification
+    - Request types tracked: PUT, GET, COPY operations for access pattern analysis
+
+    Storage Class Coverage:
+    - Standard, Intelligent-Tiering, Standard-IA, One Zone-IA
+    - Express One Zone, Reduced Redundancy (deprecated)
+    - Glacier Instant Retrieval, Glacier Flexible Retrieval, Glacier Deep Archive
+
+    Cost Components:
+    - total_storage_cost: Storage-only costs across all classes
+    - *_tier1_requests_cost: Tier1 request costs (PUT, COPY, POST, LIST)
+    - *_tier2_requests_cost: Tier2 request costs (GET and all other)
+    - *_retrieval_cost: Data retrieval costs
+    - data_transfer_cost: Data movement costs
+    - early_delete_cost: Costs from premature object deletion
+    - transition_requests: Storage class transition operation count
+    - batch_operations_cost: S3 Batch Operations costs
+
+    Multipart Upload Tracking:
+    - mpu_initiate_requests: Initiated multipart uploads
+    - mpu_complete_requests: Completed multipart uploads
+    - mpu_requests_delta: Incomplete uploads (potential waste if > 100)
+
+    Optimization Flags:
+    - is_inactive_standard_bucket: Standard storage with no recent activity (candidate for IA/archival)
+    - is_incomplete_mpu_bucket: > 100 incomplete MPU (cleanup candidate)
+    - has_early_delete_waste: Early delete costs > $10 (lifecycle policy review needed)
+    - savings_potential_standard_storage: Estimated savings from Standard -> IA migration
+    - savings_potential_glacier_instant_retrieval: Net savings from IA -> Glacier IR (accounts for higher request/retrieval costs)
+
+    Use Cases:
+    - Identify buckets for lifecycle policy implementation
+    - Calculate savings from storage class transitions
+    - Detect incomplete multipart upload waste
+    - Optimize request patterns and access costs
+    - Implement Intelligent-Tiering for variable access patterns
+    - Clean up early delete waste from overly aggressive policies
+
+    Important Notes:
+    - Savings calculations use default assumptions that should be validated for your workload
+    - Request cost increases (2x, 10x, 3x) may offset storage savings for frequently accessed data
+    - Test access patterns before implementing lifecycle transitions
+    - Monitor application performance after storage class changes
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: bucket_name
+    description: S3 bucket name.
+    data_type: varchar
+  - name: recent_request_date
+    description: Most recent date bucket had active request operations (e.g., PutObject, PutObjectForRepl, GetObject,
+      CopyObject) across the lookback period.
+    data_type: timestamp
+  - name: storage_classes_array
+    description: Array of all storage classes currently in use for the bucket.
+    data_type: array<varchar(26)>
+  - name: is_inactive_standard_bucket
+    description: Flag indicating if bucket uses only S3 Standard storage with cost above threshold and has had no active
+      requests in the underutilization period.
+    data_type: boolean
+  - name: is_incomplete_mpu_bucket
+    description: Flag indicating if bucket has more than 100 incomplete multipart uploads (delta between initiated and
+      completed requests), which may indicate wasted storage costs.
+    data_type: boolean
+  - name: has_early_delete_waste
+    description: Flag indicating if bucket has early delete costs exceeding $10, suggesting lifecycle policies may need
+      adjustment.
+    data_type: boolean
+  - name: savings_potential_standard_storage
+    description: Estimated savings if S3 Standard Storage were moved to Infrequent Access (assumes 30% savings rate,
+      adjustable based on organization preferences).
+    data_type: decimal
+  - name: savings_potential_glacier_instant_retrieval
+    description: Estimated savings or additional cost from migrating Standard-IA to Glacier Instant Retrieval (assumes
+      68% storage savings, 2x Tier1 cost, 10x Tier2 cost, 3x retrieval cost, adjustable).
+    data_type: decimal
+  - name: total_cost
+    description: Total effective cost for all S3 usage (provides a way to identify top spend buckets).
+    data_type: decimal
+  - name: total_unit_cost
+    description: Unit cost per GB across all storage.
+    data_type: decimal
+  - name: total_storage_cost
+    description: Total effective cost for storage only.
+    data_type: decimal
+  - name: total_storage_gb
+    description: Total storage capacity in GB.
+    data_type: decimal
+  - name: total_storage_unit_cost
+    description: Unit cost per GB for storage.
+    data_type: decimal
+  - name: standard_cost
+    description: Cost for S3 Standard storage class.
+    data_type: decimal
+  - name: standard_gb
+    description: Storage in GB for S3 Standard class.
+    data_type: decimal
+  - name: standard_unit_cost
+    description: Unit cost per GB for S3 Standard.
+    data_type: decimal
+  - name: intelligent_tiering_cost
+    description: Cost for S3 Intelligent-Tiering storage class.
+    data_type: decimal
+  - name: intelligent_tiering_gb
+    description: Storage in GB for S3 Intelligent-Tiering.
+    data_type: decimal
+  - name: intelligent_tiering_unit_cost
+    description: Unit cost per GB for S3 Intelligent-Tiering.
+    data_type: decimal
+  - name: standard_ia_cost
+    description: Cost for S3 Standard-IA storage class.
+    data_type: decimal
+  - name: standard_ia_gb
+    description: Storage in GB for S3 Standard-IA.
+    data_type: decimal
+  - name: standard_ia_unit_cost
+    description: Unit cost per GB for S3 Standard-IA.
+    data_type: decimal
+  - name: standard_ia_tier1_requests_cost
+    description: Cost for Standard-IA Tier1 requests (e.g., PUT, COPY, POST, LIST).
+    data_type: decimal
+  - name: standard_ia_tier2_requests_cost
+    description: Cost for Standard-IA Tier2 requests (e.g., GET and all other).
+    data_type: decimal
+  - name: standard_ia_retrieval_cost
+    description: Cost for Standard-IA data retrieval.
+    data_type: decimal
+  - name: one_zone_ia_cost
+    description: Cost for S3 One Zone-IA storage class.
+    data_type: decimal
+  - name: one_zone_ia_gb
+    description: Storage in GB for S3 One Zone-IA.
+    data_type: decimal
+  - name: one_zone_ia_unit_cost
+    description: Unit cost per GB for S3 One Zone-IA.
+    data_type: decimal
+  - name: express_one_zone_cost
+    description: Cost for S3 Express One Zone storage class.
+    data_type: decimal
+  - name: express_one_zone_gb
+    description: Storage in GB for S3 Express One Zone.
+    data_type: decimal
+  - name: express_one_zone_unit_cost
+    description: Unit cost per GB for S3 Express One Zone.
+    data_type: decimal
+  - name: reduced_redundancy_cost
+    description: Cost for S3 Reduced Redundancy storage class (deprecated).
+    data_type: decimal
+  - name: reduced_redundancy_gb
+    description: Storage in GB for S3 Reduced Redundancy.
+    data_type: decimal
+  - name: reduced_redundancy_unit_cost
+    description: Unit cost per GB for S3 Reduced Redundancy.
+    data_type: decimal
+  - name: glacier_instant_retrieval_cost
+    description: Cost for S3 Glacier Instant Retrieval storage class.
+    data_type: decimal
+  - name: glacier_instant_retrieval_gb
+    description: Storage in GB for S3 Glacier Instant Retrieval.
+    data_type: decimal
+  - name: glacier_instant_retrieval_unit_cost
+    description: Unit cost per GB for S3 Glacier Instant Retrieval.
+    data_type: decimal
+  - name: glacier_ir_tier1_requests_cost
+    description: Cost for Glacier IR Tier1 requests (e.g., PUT, COPY, POST, LIST).
+    data_type: decimal
+  - name: glacier_ir_tier2_requests_cost
+    description: Cost for Glacier IR Tier2 requests (e.g., GET and all other).
+    data_type: decimal
+  - name: glacier_ir_retrieval_cost
+    description: Cost for Glacier Instant Retrieval data retrieval.
+    data_type: decimal
+  - name: glacier_flexible_retrieval_cost
+    description: Cost for S3 Glacier Flexible Retrieval storage class.
+    data_type: decimal
+  - name: glacier_flexible_retrieval_gb
+    description: Storage in GB for S3 Glacier Flexible Retrieval.
+    data_type: decimal
+  - name: glacier_flexible_retrieval_unit_cost
+    description: Unit cost per GB for S3 Glacier Flexible Retrieval.
+    data_type: decimal
+  - name: glacier_deep_archive_cost
+    description: Cost for S3 Glacier Deep Archive storage class.
+    data_type: decimal
+  - name: glacier_deep_archive_gb
+    description: Storage in GB for S3 Glacier Deep Archive.
+    data_type: decimal
+  - name: glacier_deep_archive_unit_cost
+    description: Unit cost per GB for S3 Glacier Deep Archive.
+    data_type: decimal
+  - name: data_transfer_cost
+    description: Cost for data transfer operations.
+    data_type: decimal
+  - name: data_transfer_usage
+    description: Data transfer usage amount.
+    data_type: decimal
+  - name: early_delete_cost
+    description: Cost incurred from early deletion of objects.
+    data_type: decimal
+  - name: transition_requests
+    description: Number of storage class transition requests.
+    data_type: decimal
+  - name: batch_operations_cost
+    description: Cost for S3 Batch Operations.
+    data_type: decimal
+  - name: batch_operations_requests
+    description: Number of S3 Batch Operations requests.
+    data_type: decimal
+  - name: mpu_initiate_requests
+    description: Number of multipart upload initiation requests for the bucket.
+    data_type: decimal
+  - name: mpu_complete_requests
+    description: Number of multipart upload completion requests for the bucket.
+    data_type: decimal
+  - name: mpu_requests_delta
+    description: Delta between initiated and completed multipart uploads (positive values indicate incomplete uploads
+      that may be incurring storage costs).
+    data_type: decimal
+  - name: bucket_name_classification
+    description: Checks if bucket name contains any predefined keywords for storage class usage and returns the first
+      matching keyword, otherwise shows 'other'.
+    data_type: varchar
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar

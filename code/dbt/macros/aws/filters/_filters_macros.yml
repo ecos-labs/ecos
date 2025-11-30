@@ -1,0 +1,49 @@
+version: 2
+
+macros:
+  - name: aws_filters_data_transfer_v1
+    description: >
+      Excludes data transfer charges by product family and charge type.
+      Returns a WHERE clause condition to filter out data transfer records from billing analysis.
+      Version 1 uses product family and charge type for filtering.
+    arguments:
+      - name: product_family_col
+        type: string
+        description: Column reference for AWS product family.
+      - name: charge_type_col
+        type: string
+        description: Column reference for AWS charge type.
+
+  - name: aws_filters_data_transfer_v2
+    description: >
+      Excludes data transfer charges from AWS billing records using comprehensive patterns.
+      Returns true for data transfer charges (to exclude), false otherwise.
+      Version 2 uses subservice code and usage type patterns for more accurate filtering.
+    arguments:
+      - name: subservice_code_col
+        type: string
+        description: Column reference for AWS subservice code.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_filters_ec2_instances
+    description: >
+      Filters for EC2 running instance spend only, excluding other EC2 charges (e.g., EBS, data transfer).
+      Returns a WHERE clause condition to include only EC2 running instance costs for accurate compute analysis.
+    arguments:
+      - name: service_code_col
+        type: string
+        description: Column reference for AWS service code.
+      - name: operation_col
+        type: string
+        description: Column reference for AWS operation.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+      - name: subservice_code_col
+        type: string
+        description: Column reference for AWS subservice code.
+      - name: resource_id_col
+        type: string
+        description: Column reference for AWS resource ID.

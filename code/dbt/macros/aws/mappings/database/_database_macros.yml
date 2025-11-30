@@ -1,0 +1,83 @@
+version: 2
+
+macros:
+  - name: aws_mappings_rds_category
+    description: >
+      Categorizes Amazon RDS usage types for relational database cost analysis.
+      Maps instances, storage types, serverless, backups, and advanced features to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+      - name: engine_col
+        type: string
+        description: Column reference for database engine.
+      - name: operation_col
+        type: string
+        description: Column reference for operation.
+
+  - name: aws_mappings_dynamodb_category
+    description: >
+      Categorizes Amazon DynamoDB usage types for NoSQL database cost analysis.
+      Maps capacity units, storage, backups, and import/export operations to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_redshift_category
+    description: >
+      Categorizes Amazon Redshift usage types for data warehouse cost analysis.
+      Maps instances, serverless, managed storage, and concurrency scaling to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_documentdb_category
+    description: >
+      Categorizes Amazon DocumentDB usage types for document database cost analysis.
+      Maps instances, storage, I/O operations, and backups to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_memorydb_category
+    description: >
+      Categorizes Amazon MemoryDB usage types for in-memory database cost analysis.
+      Maps instances, data writes, and snapshots to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+      - name: engine_col
+        type: string
+        description: Column reference for database engine.
+
+  - name: aws_mappings_neptune_category
+    description: >
+      Categorizes Amazon Neptune usage types for graph database cost analysis.
+      Maps instances, storage, I/O operations, and serverless to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_elasticache_category
+    description: >
+      Categorizes Amazon ElastiCache usage types for in-memory caching cost analysis.
+      Maps cache nodes, serverless processing units, and backup storage to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_opensearch_category
+    description: >
+      Categorizes Amazon OpenSearch/Elasticsearch usage types for search cost tracking.
+      Maps instances, serverless compute units, storage types, and data transfer to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

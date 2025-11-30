@@ -1,0 +1,45 @@
+version: 2
+
+macros:
+  - name: aws_mappings_s3_bucket_keywords
+    description: >
+      Categorizes S3 buckets based on naming patterns and keywords for bucket classification.
+      Analyzes bucket names to identify common use cases like backups, logs, data lakes, websites, etc.
+      Helps organize and understand S3 storage usage patterns across the organization.
+    arguments:
+      - name: bucket_name_col
+        type: string
+        description: Column reference for S3 bucket name or resource ID.
+
+  - name: aws_mappings_ebs_category
+    description: >
+      Categorizes AWS EBS (Elastic Block Store) usage types for storage optimization analysis.
+      Maps EBS volume types, operations, and features to business-friendly categories.
+    arguments:
+      - name: service_code_col
+        type: string
+        description: Column reference for AWS service code.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_s3_category
+    description: >
+      Categorizes AWS S3 operations and usage types for comprehensive storage cost analysis.
+      Maps S3 storage classes, requests, and data management operations to business-friendly categories.
+    arguments:
+      - name: operation_col
+        type: string
+        description: Column reference for AWS operation.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_efs_category
+    description: >
+      Categorizes Amazon EFS usage types for file storage cost analysis.
+      Maps storage classes, throughput provisioning, and backup to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

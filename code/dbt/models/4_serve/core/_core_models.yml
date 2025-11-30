@@ -1,0 +1,119 @@
+version: 2
+
+models:
+  # AWS Cost Services Daily with Account Names
+  - name: serve_core__cost_service_account_daily
+    description: |
+      Ready-to-consume daily cost data by AWS service with enriched account information. This model joins cost services data with account metadata to provide human-readable linked account names alongside cost metrics, making it ideal for reporting and analytics.
+
+      Key features:
+      - Daily cost aggregation by AWS service
+      - Enriched with linked account names for usage context
+      - Includes all cost types (effective, billed, list)
+      - Optimized for business reporting and dashboards, ordered by date and cost for easy analysis
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - usage_date
+            - account_id
+            - service_code
+          config:
+            severity: error
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          config:
+            severity: warn
+    columns:
+      - name: usage_date
+        description: Date when the AWS service was used.
+        data_type: timestamp
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: timestamp
+      - name: billing_period
+        description: Billing period in YYYY-MM format.
+        data_type: varchar
+        tests:
+          - not_null
+      - name: account_id
+        description: AWS linked account identifier where usage occurred.
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              to: ref('serve_meta__account_metadata')
+              field: account_id
+              config:
+                severity: warn
+      - name: account_name
+        description: Human-readable name of the linked account.
+        data_type: varchar
+      - name: payer_account_id
+        description: AWS payer account identifier responsible for billing.
+        data_type: varchar
+        tests:
+          - not_null
+          - relationships:
+              to: ref('serve_meta__account_metadata')
+              field: account_id
+              config:
+                severity: warn
+      - name: billing_entity
+        description: AWS billing entity (e.g., AWS or AWS Marketplace).
+        data_type: varchar
+      - name: service_code
+        description: AWS service code (e.g., AmazonEC2, AmazonS3).
+        data_type: varchar
+        tests:
+          - not_null
+      - name: service_name
+        description: Cleaned and standardized AWS service name.
+        data_type: varchar
+        tests:
+          - not_null
+      - name: service_category
+        description: Standardized service category (e.g., Compute, Storage, Network).
+        data_type: varchar
+        tests:
+          - not_null
+      - name: total_effective_cost
+        description: >
+          Total effective cost after applying all discounts, credits, and RI/SP benefits.
+          This represents the actual cost to the organization.
+        data_type: decimal
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1000000000  # 1 billion - investigate if exceeded (may be legitimate for large deployments)
+              config:
+                severity: warn
+      - name: total_billed_cost
+        description: >
+          Total unblended cost that appears on the bill.
+          This is the cost before any volume discounts or credits.
+        data_type: decimal
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1000000000  # 1 billion - investigate if exceeded (may be legitimate for large deployments)
+              config:
+                severity: warn
+      - name: total_list_cost
+        description: >
+          Total public on-demand list price cost.
+          This is the standard catalog price before any discounts.
+        data_type: decimal
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 1000000000  # 1 billion - investigate if exceeded (may be legitimate for large deployments)
+              config:
+                severity: warn
+          - dbt_utils.expression_is_true:
+              expression: '>= total_effective_cost'
+              config:
+                severity: error

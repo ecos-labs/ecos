@@ -1,0 +1,62 @@
+version: 2
+
+snapshots:
+  - name: snapshot__cur_hourly_stats
+    description: |
+      Hourly snapshot of AWS CUR statistics with data quality flags. Requires AWS CUR configured with hourly granularity. Tracks cost aggregations, account counts, and line item types by hour.
+      Flags missing hours, cost outliers (>5x or <0.05x change), and late-arriving data (>45 days). Time range covers 2 months prior through 1 month future from current month. Can be run hourly in CI/CD to audit CUR data freshness and completeness.
+    columns:
+      - name: usage_hour
+        description: Hourly timestamp representing the usage period (snapshot unique key).
+        data_type: timestamp
+      - name: usage_date
+        description: Usage date for partitioning and filtering.
+        data_type: date
+      - name: count_rows
+        description: Total number of CUR records for this hour (data volume indicator).
+        data_type: bigint
+      - name: cost
+        description: Total unblended cost for the hour across all accounts and services.
+        data_type: double
+      - name: lag_cost
+        description: Previous hour's total cost for trend analysis and change detection.
+        data_type: double
+      - name: lag_perc_change
+        description: Percentage change from previous hour (cost / lag_cost ratio).
+        data_type: double
+      - name: ct_accounts
+        description: Count of distinct payer accounts with data in this hour.
+        data_type: bigint
+      - name: max_modified_date
+        description: Latest timestamp when CUR data was modified (snapshot update trigger).
+        data_type: timestamp
+      - name: min_modified_date
+        description: Earliest timestamp when CUR data was modified (data freshness indicator).
+        data_type: timestamp
+      - name: date_diff_usage_modified
+        description: Days between usage hour and data modification (data latency metric).
+        data_type: bigint
+      - name: line_item_type
+        description: Array of distinct charge types present in this hour (Usage, Credit, etc.).
+        data_type: array<string>
+      - name: is_missing_hour
+        description: Data quality flag (marked 'x' if no CUR data exists for this hour, empty otherwise).
+        data_type: varchar(1)
+      - name: is_cost_outlier
+        description: Data quality flag (marked 'x' if cost change >5x or <0.05x from previous hour, empty otherwise).
+        data_type: varchar(1)
+      - name: is_late_arriving
+        description: Data quality flag (marked 'x' if data arrived >45 days after usage date, empty otherwise).
+        data_type: varchar(1)
+      - name: dbt_scd_id
+        description: Unique identifier for this snapshot version (slowly changing dimension tracking).
+        data_type: string
+      - name: dbt_updated_at
+        description: Timestamp when this row was last updated in the snapshot.
+        data_type: timestamp
+      - name: dbt_valid_from
+        description: Timestamp from which this row is valid (beginning of validity period).
+        data_type: timestamp
+      - name: dbt_valid_to
+        description: Timestamp until which this row is valid (end of validity period, null if current).
+        data_type: timestamp

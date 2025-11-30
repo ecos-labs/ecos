@@ -1,0 +1,248 @@
+product_code,service_nice_name,service_category
+A4B,Alexa for Business,Business Applications
+ACM,AWS Certificate Manager,"Security, Identity and Compliance"
+AWSAmplify,AWS Amplify,Front-end Web and Mobile
+AWSAppFabric,AWS AppFabric,Integration
+AWSAppRunner,AWS App Runner,Compute
+AWSAppStudio,AWS App Studio,AI and Machine Learning
+AWSAppSync,AWS AppSync,Front-end Web and Mobile
+AWSApplicationMigrationSvc,AWS Application Migration Service,Migration and Transfer
+AWSB2Bi,AWS B2B Data Interchange,Integration
+AWSBCMPricingCalculator,AWS Billing and Cost Management Pricing Calculator,Cost Management
+AWSBackup,AWS Backup,Storage
+AWSBillingConductor,AWS Billing Conductor,Cost Management
+AWSBudgets,AWS Budgets,Cost Management
+AWSCertificateManager,AWS Certificate Manager,"Security, Identity and Compliance"
+AWSCleanRooms,AWS Clean Rooms,Business Applications
+AWSCloudFormation,AWS CloudFormation,Management and Governance
+AWSCloudMap,AWS Cloud Map,Networking and Content Delivery
+AWSCloudTrail,AWS CloudTrail,Management and Governance
+AWSCloudWAN,AWS Cloud WAN,Networking and Content Delivery
+AWSCodeArtifact,AWS CodeArtifact,Developer Tools
+AWSCodeCommit,AWS CodeCommit,Developer Tools
+AWSCodeDeploy,AWS CodeDeploy,Developer Tools
+AWSCodePipeline,AWS CodePipeline,Developer Tools
+AWSComputeOptimizer,AWS Compute Optimizer,Developer Tools
+AWSConfig,AWS Config,Management and Governance
+AWSCostExplorer,AWS Cost Explorer,Cost Management
+AWSDataExchange,AWS Data Exchange,Migration and Transfer
+AWSDataSync,AWS DataSync,Migration and Transfer
+AWSDataTransfer,AWS Data Transfer,Migration and Transfer
+AWSDatabaseMigrationSvc,AWS Database Migration Service,Migration and Transfer
+AWSDeepRacer,AWS DeepRacer,AI and Machine Learning
+AWSDeveloperSupport,AWS Developer Support,Support
+AWSDeviceFarm,AWS Device Farm,Front-end Web and Mobile
+AWSDirectConnect,AWS Direct Connect,Networking and Content Delivery
+AWSDirectoryService,AWS Directory Service,"Security, Identity and Compliance"
+AWSELB,AWS Elastic Load Balancing,Networking and Content Delivery
+AWSElasticDisasterRecovery,AWS Elastic Disaster Recovery,Migration and Transfer
+AWSElementalMediaConvert,AWS Elemental MediaConvert,Media
+AWSElementalMediaLive,AWS Elemental MediaLive,Media
+AWSElementalMediaPackage,AWS Elemental MediaPackage,Media
+AWSElementalMediaStore,AWS Elemental MediaStore,Media
+AWSElementalMediaTailor,AWS Elemental MediaTailor,Media
+AWSEndUserMessaging3pFees,AWS End User Messaging Fees,Business Applications
+AWSEnterpriseOnRamp,AWS Enterprise On-Ramp,Business Applications
+AWSEntityResolution,AWS Entity Resolution,AI and Machine Learning
+AWSEvents,Amazon EventBridge,Management and Governance
+AWSFIS,AWS Fault Injection Simulator,Developer Tools
+AWSFMS,AWS Firewall Manager,"Security, Identity and Compliance"
+AWSGlobalAccelerator,AWS Global Accelerator,Networking and Content Delivery
+AWSGlue,AWS Glue,Analytics
+AWSGlueElasticViews,AWS Glue Elastic Views,Analytics
+AWSGreengrass,AWS Greengrass,Internet of Things
+AWSGroundStation,AWS Ground Station,Analytics
+AWSIAMAccessAnalyzer,AWS IAM Access Analyzer,"Security, Identity and Compliance"
+AWSIoT,AWS IoT,Internet of Things
+AWSIoT1Click,AWS IoT 1-Click,Internet of Things
+AWSIoTAnalytics,AWS IoT Analytics,Internet of Things
+AWSIoTEvents,AWS IoT Events,Internet of Things
+AWSIoTFleetWise,AWS IoT FleetWise,Internet of Things
+AWSIoTSiteWise,AWS IoT SiteWise,Internet of Things
+AWSIoTThingsGraph,AWS IoT Things Graph,Internet of Things
+AWSLakeFormation,AWS Lake Formation,Analytics
+AWSLambda,AWS Lambda,Compute
+AWSM2,AWS Mainframe Modernization,Migration and Transfer
+AWSMDC,AWS Modular Data Center,Compute
+AWSManagedServices,AWS Managed Services,Management and Governance
+AWSMediaConnect,AWS Elemental MediaConnect,Media
+AWSMigrationHubRefactorSpaces,AWS Migration Hub Refactor Spaces,Migration and Transfer
+AWSNetworkFirewall,AWS Network Firewall,Networking and Content Delivery
+AWSOutposts,AWS Outposts,Compute
+AWSPCS,AWS Parallel Computing Service,Compute
+AWSPrivate5G,AWS Private 5G,Internet of Things
+AWSQueueService,Amazon Simple Queue Service,Integration
+AWSR53AppRecoveryController,Amazon Application Recovery Controller,Networking and Content Delivery
+AWSRTBFabric,AWS RTB Fabric,Networking and Content Delivery
+AWSResilienceHub,AWS Resilience Hub,Management and Governance
+AWSRoboMaker,AWS RoboMaker,Robotics
+AWSSecretsManager,AWS Secrets Manager,"Security, Identity and Compliance"
+AWSSecurityHub,AWS Security Hub,"Security, Identity and Compliance"
+AWSServiceCatalog,AWS Service Catalog,Management and Governance
+AWSShield,AWS Shield,"Security, Identity and Compliance"
+AWSStorageGateway,AWS Storage Gateway,Storage
+AWSStorageGatewayDeepArchive,AWS Storage Gateway Deep Archive,Storage
+AWSSupplyChain,AWS Supply Chain,Business Applications
+AWSSupportBusiness,AWS Business Support,Support
+AWSSupportEnterprise,AWS Enterprise Support,Support
+AWSSystemsManager,AWS Systems Manager,Management and Governance
+AWSTelcoNetworkBuilder,AWS Telco Network Builder,Management and Governance
+AWSTransfer,AWS Transfer Family,Migration and Transfer
+AWSWickr,AWS Wickr,Business Applications
+AWSWisdom,Amazon Connect Wisdom,AI and Machine Learning
+AWSXRay,AWS X-Ray,Developer Tools
+AlexaTopSites,Alexa Top Sites,Business Applications
+AlexaWebInfoService,Alexa Web Info Service,Business Applications
+AmazonA2I,Amazon Augmented AI,AI and Machine Learning
+AmazonApiGateway,Amazon API Gateway,Networking and Content Delivery
+AmazonAppStream,Amazon AppStream,Business Applications
+AmazonAthena,Amazon Athena,Analytics
+AmazonBedrock,Amazon Bedrock,AI and Machine Learning
+AmazonBedrockAgentCore,Amazon Bedrock Agent Core,AI and Machine Learning
+AmazonBedrockFoundationModels,Amazon Bedrock Foundation Models,AI and Machine Learning
+AmazonBedrockService,Amazon Bedrock Service,AI and Machine Learning
+AmazonBraket,Amazon Braket,Compute
+AmazonChime,Amazon Chime,Business Applications
+AmazonChimeBusinessCalling,Amazon Chime Business Calling,Business Applications
+AmazonChimeCallMe,Amazon Chime Call Me,Business Applications
+AmazonChimeCallMeAMCS,Amazon Chime Call Me AMCS,Business Applications
+AmazonChimeDialInAMCS,Amazon Chime Dial In AMCS,Business Applications
+AmazonChimeDialin,Amazon Chime Dialin,Business Applications
+AmazonChimeFeatures,Amazon Chime Features,Business Applications
+AmazonChimeServices,Amazon Chime Services,Business Applications
+AmazonChimeVoiceConnector,Amazon Chime Voice Connector,Business Applications
+AmazonCloudDirectory,Amazon Cloud Directory,"Security, Identity and Compliance"
+AmazonCloudFront,Amazon CloudFront,Networking and Content Delivery
+AmazonCloudSearch,Amazon Cloud Search,Analytics
+AmazonCloudWatch,Amazon CloudWatch,Management and Governance
+AmazonCodeWhisperer,Amazon CodeWhisperer,Developer Tools
+AmazonCognito,Amazon Cognito,"Security, Identity and Compliance"
+AmazonCognitoSync,Amazon Cognito Sync,"Security, Identity and Compliance"
+AmazonConnect,Amazon Connect,Business Applications
+AmazonConnectCases,Amazon Connect Cases,Customer Engagement
+AmazonConnectVoiceID,Amazon Connect Voice ID,Customer Engagement
+AmazonDAX,Amazon DynamoDB Accelerator,Databases
+AmazonDataZone,Amazon DataZone,Analytics
+AmazonDeadline,Amazon Deadline,Media
+AmazonDetective,Amazon Detective,"Security, Identity and Compliance"
+AmazonDevOpsGuru,Amazon DevOps Guru,Developer Tools
+AmazonDocDB,Amazon DocumentDB (with MongoDB compatibility),Databases
+AmazonDynamoDB,Amazon DynamoDB,Databases
+AmazonEC2,Amazon Elastic Compute Cloud,Compute
+AmazonEC2OCPULicenseFees,Amazon EC2 OCPU License Fees,Compute
+AmazonECR,Amazon EC2 Container Registry (ECR),Containers
+AmazonECRPublic,Amazon Elastic Container Registry Public,Containers
+AmazonECS,Amazon Elastic Container Service,Containers
+AmazonEFS,Amazon Elastic File System,Storage
+AmazonEI,Amazon Elastic Inference,AI and Machine Learning
+AmazonEKS,Amazon Elastic Container Service for Kubernetes,Containers
+AmazonEKSAnywhere,Amazon Elastic Container Service for Kubernetes Anywhere,Containers
+AmazonES,Amazon OpenSearch Service,Analytics
+AmazonETS,Amazon Elastic Transcoder,Media
+AmazonEVS,Amazon Elastic VMware Service,Compute
+AmazonElastiCache,Amazon ElastiCache,Databases
+AmazonFSx,Amazon FSx,Storage
+AmazonFinSpace,Amazon FinSpace,Analytics
+AmazonForecast,Amazon Forecast,AI and Machine Learning
+AmazonFraudDetector,Amazon Fraud Detector,AI and Machine Learning
+AmazonGameLift,Amazon GameLift,Game Tech
+AmazonGameLiftStreams,Amazon GameLift Streams,Game Tech
+AmazonGlacier,Amazon Glacier,Storage
+AmazonGrafana,Amazon Managed Grafana,Management and Governance
+AmazonGuardDuty,Amazon GuardDuty,"Security, Identity and Compliance"
+AmazonHealthLake,Amazon Health Lake,Healthcare and Life Sciences
+AmazonHoneycode,Amazon Honeycode,Front-end Web and Mobile
+AmazonIVS,Amazon Interactive Video Service,Media
+AmazonIVSChat,Amazon Interactive Video Service Chat,Media
+AmazonInspector,Amazon Inspector,"Security, Identity and Compliance"
+AmazonInspectorV2,Amazon Inspector,"Security, Identity and Compliance"
+AmazonKendra,Amazon Kendra,AI and Machine Learning
+AmazonKinesis,Amazon Kinesis,Analytics
+AmazonKinesisAnalytics,Amazon Kinesis Analytics,Analytics
+AmazonKinesisFirehose,Amazon Kinesis Firehose,Analytics
+AmazonKinesisVideo,Amazon Kinesis Video Streams,Media
+AmazonLex,Amazon Lex,AI and Machine Learning
+AmazonLightsail,Amazon Lightsail,Compute
+AmazonLocationService,Amazon Location Service,Front-end Web and Mobile
+AmazonLookoutEquipment,Amazon Lookout for Equipment,AI and Machine Learning
+AmazonLookoutMetrics,Amazon Lookout for Metrics,AI and Machine Learning
+AmazonLookoutVision,Amazon Lookout Vision,AI and Machine Learning
+AmazonMCS,Amazon Keyspaces (for Apache Cassandra),Databases
+AmazonML,Amazon ML,AI and Machine Learning
+AmazonMQ,Amazon MQ,Integration
+AmazonMSK,Amazon Managed Streaming for Apache Kafka,Analytics
+AmazonMWAA,Amazon Managed Workflows for Apache Airflow,Integration
+AmazonMacie,Amazon Macie,"Security, Identity and Compliance"
+AmazonManagedBlockchain,Amazon Managed Blockchain,Blockchain
+AmazonMedicalImaging,Amazon Medical Imaging,Healthcare and Life Sciences
+AmazonMemoryDB,Amazon MemoryDB,Databases
+AmazonMonitron,Amazon Monitron,AI and Machine Learning
+AmazonNeptune,Amazon Neptune,Databases
+AmazonOmics,Amazon Omics,AI and Machine Learning
+AmazonPersonalize,Amazon Personalize,AI and Machine Learning
+AmazonPinpoint,Amazon Pinpoint,Customer Engagement
+AmazonPolly,Amazon Polly,AI and Machine Learning
+AmazonPrometheus,Amazon Managed Service for Prometheus,Management and Governance
+AmazonQ,Amazon Q,AI and Machine Learning
+AmazonQLDB,Amazon Quantum Ledger Database,Databases
+AmazonQuickSight,Amazon QuickSight,Analytics
+AmazonRDS,Amazon Relational Database Service,Databases
+AmazonRedshift,Amazon Redshift,Databases
+AmazonRekognition,Amazon Rekognition,AI and Machine Learning
+AmazonRoute53,Amazon Route 53,Networking and Content Delivery
+AmazonS3,Amazon Simple Storage Service,Storage
+AmazonS3GlacierDeepArchive,Amazon S3 Glacier Deep Archive,Storage
+AmazonSES,Amazon Simple Email Service,Customer Engagement
+AmazonSNS,Amazon Simple Notification Service,Integration
+AmazonSWF,Amazon Simple Workflow Service,Integration
+AmazonSageMaker,Amazon SageMaker,AI and Machine Learning
+AmazonSecurityLake,Amazon Security Lake,"Security, Identity and Compliance"
+AmazonSimpleDB,Amazon SimpleDB,Databases
+AmazonStates,AWS Step Functions,Compute
+AmazonSumerian,Amazon Sumerian,AR and VR
+AmazonTextract,Amazon Textract,AI and Machine Learning
+AmazonTimestream,Amazon Timestream,Databases
+AmazonVPC,Amazon Virtual Private Cloud,Networking and Content Delivery
+AmazonVerifiedPermissions,Amazon Verified Permissions,"Security, Identity and Compliance"
+AmazonWAM,Amazon WorkSpaces Application Manager,End User Computing
+AmazonWorkDocs,Amazon WorkDocs,Business Applications
+AmazonWorkLink,Amazon WorkLink,Business Applications
+AmazonWorkMail,Amazon WorkMail,Business Applications
+AmazonWorkSpaces,Amazon WorkSpaces,End User Computing
+AmazonWorkSpacesThinClient,Amazon WorkSpaces Thin Client,End User Computing
+AmazonWorkSpacesWeb,Amazon WorkSpaces Web,End User Computing
+AppFlow,Amazon AppFlow,Integration
+AuroraDSQL,Amazon Aurora DSQL,Databases
+CloudHSM,AWS CloudHSM,"Security, Identity and Compliance"
+CodeBuild,AWS CodeBuild,Developer Tools
+CodeCatalyst,Amazon CodeCatalyst,Developer Tools
+CodeGuru,AWS CodeGuru,Developer Tools
+ContactCenterTelecomm,Amazon Connect Telecomm,Business Applications
+ContactCenterTelecommKR,Amazon Connect Telecomm KR,Business Applications
+ContactCenterTelecommZA,Amazon Connect Telecomm ZR,Business Applications
+ContactLensAmazonConnect,Amazon Connect Contact Lens,Customer Engagement
+CustomerProfiles,Amazon Connect Customer Profiles,Customer Engagement
+ElasticMapReduce,Amazon Elastic MapReduce,Analytics
+IngestionService,Amazon OpenSearch Ingestion,Analytics
+IngestionServiceSnowball,AWS Snowball Ingestion,Migration and Transfer
+IoTDeviceDefender,AWS IoT Device Defender,Internet of Things
+IoTDeviceManagement,AWS IoT Device Management,Internet of Things
+IoTTwinMaker,AWS IoT TwinMaker,Internet of Things
+OpsWorks,AWS OpsWorks,Management and Governance
+OracleDbAtAWS,Oracle Database at AWS,Databases
+PaymentCryptography,AWS Payment Cryptography,"Security, Identity and Compliance"
+SSMSAP,AWS Systems Manager for SAP,Management and Governance
+SimSpaceWeaver,AWS SimSpace Weaver,Compute
+SnowballExtraDays,AWS Snowball Extra,Migration and Transfer
+VMwareCloudOnAWS,VMware Cloud in AWS,Compute
+auditmanager,AWS Audit Manager,"Security, Identity and Compliance"
+awskms,AWS Key Management Service,"Security, Identity and Compliance"
+awswaf,AWS WAF,"Security, Identity and Compliance"
+comprehend,Amazon Comprehend,AI and Machine Learning
+comprehendmedical,Amazon Comprehend Medical,AI and Machine Learning
+datapipeline,AWS Data Pipeline,Developer Tools
+mobileanalytics,AWS Mobile Analytics,Analytics
+nimble,AWS Nimble Studio,Media
+repostspace,AWS re:Post Private,Business Applications
+transcribe,Amazon Transcribe,AI and Machine Learning
+translate,Amazon Translate,AI and Machine Learning

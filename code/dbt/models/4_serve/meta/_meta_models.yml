@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: serve_meta__account_metadata
+    description: |
+      Consolidated metadata for all AWS accounts in the organization, including both linked accounts (where usage occurs) and payer accounts (responsible for billing).
+      This model provides a master list of all accounts with their names and types, useful for account management, cost allocation, and organizational reporting.
+
+      Key features:
+      - Sources data from the last 3 months for current account information
+      - groups and deduplicates account information from CUR data
+      - distinguishes between linked and payer accounts
+      - provides last updated timestamp for data freshness tracking
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id
+            - account_type
+          config:
+            severity: error
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+          config:
+            severity: error
+    columns:
+      - name: account_id
+        description: AWS account identifier (12-digit number).
+        data_type: varchar
+        tests:
+          - not_null
+          - unique:
+              config:
+                where: account_type = 'linked'
+          - dbt_expectations.expect_column_value_lengths_to_equal:
+              value: 12
+              config:
+                severity: error
+      - name: account_name
+        description: Human-readable AWS account name (may be NULL if not available in CUR data).
+        data_type: varchar
+        tests:
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+              min_value: 1
+              max_value: 500
+              config:
+                severity: warn
+                where: "account_name is not null"
+      - name: account_type
+        description: Type of account (e.g., linked or payer).
+        data_type: varchar
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - linked
+                - payer
+      - name: last_updated
+        description: Timestamp when the record was last updated.
+        data_type: string
+        tests:
+          - not_null

@@ -1,0 +1,473 @@
+version: 2
+models:
+- name: gold_network__data_transfer_daily
+  description: |
+    Monthly aggregation of AWS data transfer costs across all services with source/destination location tracking for network cost optimization.
+    Note: Despite the model name, this aggregates to monthly grain for comprehensive transfer analysis.
+
+    Key Features:
+    - Categorizes data transfer via aws_mappings_data_transfer_category macro (Inter-AZ, Inter-Region, Internet, VPC Endpoints, etc.)
+    - Captures source and destination locations for flow analysis
+    - Cross-service coverage (EC2, S3, RDS, Lambda, etc.)
+    - Resource-level granularity for targeted optimization
+    - Filters to positive costs only for cleaner analysis
+
+    Use Cases:
+    - Identify expensive inter-region data transfer patterns
+    - Analyze inter-AZ traffic for single-AZ consolidation opportunities
+    - Track internet egress costs by service and resource
+    - Plan VPC endpoint implementation to reduce NAT Gateway data processing
+    - Detect unexpected cross-region replication costs
+
+    Important Notes:
+    - Includes Usage, DiscountedUsage, and SavingsPlanCoveredUsage charge types
+    - High granularity (resource + operation level) may result in many rows
+    - Consider aggregating by data_transfer_category for summary analysis
+  columns:
+  - name: usage_date
+    description: First day of the month for aggregation. All data transfer costs for the month are rolled up to this date.
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer (management) account identifier for consolidated billing context.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier generating the data transfer.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code generating the data transfer (e.g., AmazonEC2, AmazonS3, AmazonRDS).
+    data_type: varchar
+  - name: service_name
+    description: Human-readable AWS service name.
+    data_type: varchar
+  - name: resource_name
+    description: Name of the resource generating data transfer (instance ID, bucket name, etc.).
+    data_type: varchar
+  - name: usage_type
+    description: Raw AWS usage type for detailed analysis (e.g., DataTransfer-Out-Bytes, USE1-USE2-AWS-Out-Bytes).
+    data_type: varchar
+  - name: operation
+    description: AWS operation type (e.g., RunInstances, GetObject, S3ToS3Transfer).
+    data_type: varchar
+  - name: product_from_location
+    description: Source location of data transfer (AWS region name or Internet).
+    data_type: varchar
+  - name: product_to_location
+    description: Destination location of data transfer (AWS region name or Internet).
+    data_type: varchar
+  - name: region_id
+    description: AWS region where the source resource is located (e.g., us-east-1, eu-west-1).
+    data_type: varchar
+  - name: data_transfer_category
+    description: Standardized data transfer category from aws_mappings_data_transfer_category macro. Values include Inter-AZ, Inter-Region, Internet Egress, VPC Endpoint, CloudFront, and others.
+    data_type: varchar
+  - name: total_usage_amount
+    description: Total data transfer volume in GB for this service/resource/category combination.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for data transfer, accounting for discounts and Savings Plan coverage.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_network__data_transfer_imbalance_optimization_monthly
+  description: |
+    Monthly analysis of inter-AZ data transfer imbalances.
+    Identifies availability zones with high data transfer costs due to imbalanced traffic patterns and provides optimization recommendations.
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: resource_id
+    description: Resource identifier.
+    data_type: varchar
+  - name: interaz_in_cost
+    description: Inter-AZ inbound cost.
+    data_type: decimal
+  - name: interaz_out_cost
+    description: Inter-AZ outbound cost.
+    data_type: decimal
+  - name: total_interaz_cost
+    description: Total inter-AZ cost.
+    data_type: decimal
+  - name: in_out_ratio
+    description: Inbound to outbound ratio.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_network__firewall_optimization_monthly
+  description: |
+    Monthly analysis of AWS Network Firewall optimization opportunities.
+    Identifies firewalls with low activity that could be optimized or consolidated to reduce costs while maintaining security posture.
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: resource_name
+    description: Resource name.
+    data_type: varchar
+  - name: resource_id
+    description: Firewall resource identifier.
+    data_type: varchar
+  - name: hourly_effective_cost
+    description: Hourly effective cost.
+    data_type: decimal
+  - name: traffic_effective_cost
+    description: Traffic-based effective cost.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost.
+    data_type: decimal
+  - name: hourly_usage_amount
+    description: Hourly usage amount.
+    data_type: decimal
+  - name: traffic_usage_amount
+    description: Traffic usage amount.
+    data_type: decimal
+  - name: hourly_to_traffic_ratio
+    description: Hourly to traffic ratio.
+    data_type: decimal
+  - name: traffic_pattern
+    description: Traffic pattern classification.
+    data_type: varchar
+  - name: is_low_activity_candidate
+    description: Flag for low activity candidate.
+    data_type: boolean
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_network__ipv4_monthly
+  description: |
+    Monthly analysis of IPv4 public IP address costs and usage.
+    Tracks public IPv4 address allocation and identifies unused or underutilized addresses that could be released to reduce costs.
+  columns:
+  - name: usage_date
+    description: Month of usage.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: ipv4_category
+    description: IPv4 category.
+    data_type: varchar
+  - name: total_usage_amount
+    description: Total usage amount.
+    data_type: decimal
+  - name: count_unique_ip
+    description: Count of unique IPv4 addresses.
+    data_type: integer
+  - name: total_effective_cost
+    description: Total effective cost for IPv4 usage.
+    data_type: decimal
+  - name: cost_per_ip
+    description: Cost per IP address.
+    data_type: decimal
+  - name: is_ipv6_migration_candidate
+    description: Flag indicating IPv6 migration candidate.
+    data_type: boolean
+  - name: optimization_recommendation
+    description: Optimization recommendation.
+    data_type: varchar
+  - name: potential_ipv6_savings
+    description: Potential savings with IPv6.
+    data_type: decimal
+  - name: potential_cleanup_savings
+    description: Potential savings from cleanup.
+    data_type: decimal
+  - name: migration_notes
+    description: Migration notes.
+    data_type: varchar
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_network__load_balancer_monthly
+  description: |
+    Monthly analysis of Elastic Load Balancer (ELB) costs and usage.
+    Provides insights into ALB, NLB, and CLB usage patterns, capacity utilization, and optimization opportunities for load balancer configurations.
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: elb_name
+    description: Elastic Load Balancer name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: pricing_unit
+    description: Pricing unit.
+    data_type: varchar
+  - name: total_usage_amount
+    description: Total usage amount.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost.
+    data_type: decimal
+  - name: effective_cost_per_resource
+    description: Effective cost per resource.
+    data_type: decimal
+  - name: has_savings_potential
+    description: Flag indicating savings potential.
+    data_type: boolean
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_network__nat_gateway_details_daily
+  description: |
+    Daily detailed breakdown of NAT Gateway costs and usage by usage category.
+    Provides granular analysis of data processing, hourly usage, and data transfer costs for each NAT Gateway resource for optimization analysis.
+  columns:
+  - name: usage_date
+    description: Date of usage (daily grain).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: resource_name
+    description: NAT Gateway resource name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: usage_category
+    description: NAT Gateway usage category (e.g., Data Processing, Hourly Usage, Data Transfer).
+    data_type: varchar
+  - name: total_usage_amount
+    description: Total usage amount (GB or hours depending on category).
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for the usage category.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_network__nat_gateway_summary_monthly
+  description: |
+    Monthly aggregated summary of NAT Gateway costs with optimization analysis and idle resource detection.
+    Provides comprehensive monthly view of NAT Gateway costs broken down by cost type (data processing, hourly, data transfer)
+    with idle detection and traffic tier classification. Identifies NAT Gateways that ran for more than 336 hours (half month)
+    but received no data traffic, which could be candidates for deletion.
+
+    Idle Detection Logic:
+    - Threshold: 336 hours (half month) of hourly usage
+    - No traffic definition: Only one pricing unit present (hourly only, no data processing)
+    - Rationale: NAT Gateway ran continuously but processed no data
+    - Flag: is_idle_candidate = true when hourly > 336 hrs AND pricing_unit_count = 1
+
+    Traffic Tier Classification:
+    - No Data Traffic: Only hourly charges, no data processing
+    - Very Low: < 100 GB processed
+    - Low: 100-1000 GB processed
+    - Medium: 1-10 TB processed
+    - High: > 10 TB processed
+
+    Cost Components:
+    - data_processing_effective_cost: Cost for data processed through NAT Gateway ($0.045/GB)
+    - hourly_effective_cost: Fixed hourly cost for NAT Gateway availability ($0.045/hour)
+    - data_transfer_effective_cost: Inter-region/internet data transfer costs
+    - total_effective_cost: Sum of all NAT Gateway costs
+
+    Usage Metrics:
+    - data_processing_gb: Data volume processed through NAT Gateway
+    - hourly_usage: Total hours NAT Gateway was provisioned
+    - data_transfer_gb: Data transferred out (to internet or other regions)
+
+    Filters Applied:
+    - Product: AmazonEC2
+    - Usage type: Contains 'Nat'
+    - Line item type: Usage only
+    - Time period: Previous month
+
+    Use Cases:
+    - Identify idle NAT Gateways for deletion (cost savings: ~$32/month per gateway)
+    - Analyze data processing patterns for optimization
+    - Detect over-provisioned NAT Gateway capacity
+    - Plan VPC endpoint implementation to reduce NAT Gateway dependency
+
+    Optimization Recommendations:
+    - Delete NAT Gateways with no data traffic for > 336 hours
+    - Consider VPC endpoints for AWS service traffic (S3, DynamoDB, etc.)
+    - Consolidate NAT Gateways across availability zones where appropriate
+    - Review Data Transfer Costs Explained guide for additional optimization strategies
+    - Monitor traffic patterns before deletion to ensure no impact
+
+    Important Notes:
+    - 336-hour threshold ensures gateway ran for at least half the month
+    - Single pricing unit (hourly only) indicates no data was processed
+    - Deletion candidates should be validated with application teams
+    - Consider high availability requirements before consolidation
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: resource_name
+    description: NAT Gateway resource name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: is_idle_candidate
+    description: Flag indicating if NAT Gateway is an idle candidate (low data traffic with at least 2 weeks of hourly
+      costs).
+    data_type: boolean
+  - name: traffic_tier
+    description: Traffic tier classification (e.g., No Data Traffic, Very Low, Low, Medium, High).
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost across all usage categories.
+    data_type: decimal
+  - name: data_processing_effective_cost
+    description: Cost for NAT Gateway data processing.
+    data_type: decimal
+  - name: hourly_effective_cost
+    description: Cost for NAT Gateway hourly usage.
+    data_type: decimal
+  - name: data_transfer_effective_cost
+    description: Cost for NAT Gateway data transfer.
+    data_type: decimal
+  - name: data_processing_gb
+    description: Data processed through NAT Gateway in GB.
+    data_type: decimal
+  - name: hourly_usage
+    description: Total NAT Gateway usage hours.
+    data_type: decimal
+  - name: data_transfer_gb
+    description: Data transferred through NAT Gateway in GB.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_network__transit_gateway_monthly
+  description: |
+    Monthly aggregation of AWS Transit Gateway costs by resource and charge type, enabling network infrastructure cost analysis.
+    Sources data from silver_aws__cur_enhanced filtered to AWSTransitGateway product group with running usage.
+
+    Key Features:
+    - Separates hourly charges (attachment costs) from data processing charges
+    - Tracks costs by attachment type (VPC, VPN, Direct Connect, Peering)
+    - Resource-level granularity for cost attribution across TGW resources
+    - Regional breakdown for multi-region Transit Gateway deployments
+    - Filters to positive effective costs only
+
+    Use Cases:
+    - Analyze Transit Gateway costs by attachment type and region
+    - Compare hourly fixed costs vs data processing variable costs
+    - Identify expensive cross-account or cross-region data flows
+    - Plan Transit Gateway consolidation or peering optimizations
+    - Track network infrastructure costs by account
+
+    Important Notes:
+    - Hourly charges are fixed costs for TGW attachments (~$0.05/hour per attachment)
+    - Data processing charges scale with traffic volume (~$0.02/GB)
+    - Consider VPC peering for high-volume same-region traffic (lower cost)
+  columns:
+  - name: usage_date
+    description: First day of the month for aggregation. All Transit Gateway costs for the month are rolled up to this date.
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer (management) account identifier for consolidated billing context.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier where the Transit Gateway attachment is owned.
+    data_type: varchar
+  - name: resource_identifier
+    description: Transit Gateway resource name extracted from resource_name field.
+    data_type: varchar
+  - name: resource_id
+    description: Full Transit Gateway resource ARN for precise identification.
+    data_type: varchar
+  - name: region_id
+    description: AWS region where the Transit Gateway is deployed (e.g., us-east-1, eu-west-1).
+    data_type: varchar
+  - name: product_attachment_type
+    description: Type of Transit Gateway attachment (VPC, VPN, DirectConnect, Peering, Connect).
+    data_type: varchar
+  - name: pricing_unit
+    description: AWS pricing unit (hour for attachments, GigaBytes for data processing).
+    data_type: varchar
+  - name: charge_category
+    description: Derived charge category based on pricing unit. Values are Hourly charges (fixed attachment costs), Data processing charges (variable traffic costs), or Other.
+    data_type: varchar
+  - name: total_usage_amount
+    description: Sum of usage quantity for the month (hours for attachments, GB for data processing).
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for this Transit Gateway resource/charge type combination, accounting for discounts.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_network__vpc_endpoint_optimization_monthly
+  description: |
+    Monthly analysis of VPC Endpoint optimization opportunities.
+    Identifies VPC Endpoints with low activity that could be optimized or removed to reduce costs while maintaining connectivity requirements.
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: resource_name
+    description: Resource name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: is_idle_candidate
+    description: Flag indicating idle candidate.
+    data_type: boolean
+  - name: traffic_tier
+    description: Traffic tier classification.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost.
+    data_type: decimal
+  - name: hourly_effective_cost
+    description: Hourly effective cost.
+    data_type: decimal
+  - name: data_processing_effective_cost
+    description: Data processing effective cost.
+    data_type: decimal
+  - name: hourly_usage
+    description: Hourly usage amount.
+    data_type: decimal
+  - name: data_processing_gb
+    description: Data processing in GB.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar

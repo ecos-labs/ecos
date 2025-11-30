@@ -1,0 +1,106 @@
+version: 2
+
+seeds:
+  - name: seed__aws_instance_modernization
+    description: |
+      Comprehensive mapping table for AWS EC2 instance family modernization and optimization recommendations.
+      Provides upgrade paths from older instance families to current and latest generation instances across different processor architectures (Intel, AMD, Graviton).
+
+      This mapping enables:
+      - Instance modernization recommendations for cost optimization
+      - Processor architecture migration analysis (Intel → AMD → Graviton)
+      - Performance and cost comparison across instance generations
+      - Automated rightsizing and modernization suggestions
+      - Historical instance family lifecycle tracking
+
+      Used by compute optimization models to identify modernization opportunities and calculate potential savings from upgrading to newer, more efficient instance types.
+
+      Source CSV: https://github.com/ecos-labs/ecos/blob/main/code/dbt/seeds/aws/seed__aws_instance_modernization.csv
+    columns:
+      - name: family
+        description: AWS EC2 instance family identifier (e.g., m5, c5, r5)
+        data_type: varchar
+      - name: product
+        description: AWS product code (typically AmazonEC2)
+        data_type: varchar
+      - name: generation
+        description: Generation classification (Current, Previous, Latest) indicating instance age
+        data_type: varchar
+      - name: instance_processor
+        description: Primary processor architecture (Intel, AMD, Graviton)
+        data_type: varchar
+      - name: latest_intel
+        description: Latest Intel-based instance family recommendation for modernization
+        data_type: varchar
+      - name: latest_amd
+        description: Latest AMD-based instance family recommendation for modernization
+        data_type: varchar
+      - name: latest_graviton
+        description: Latest Graviton (ARM)-based instance family recommendation for modernization
+        data_type: varchar
+      - name: previous_intel
+        description: Previous generation Intel instance family for historical comparison
+        data_type: varchar
+
+  - name: seed__aws_product_service_category
+    description: |
+      Authoritative mapping of AWS product codes to standardized service names and categories for consistent classification across cost analysis and optimization models. Provides human-readable service names and high-level categorization for AWS services.
+
+      This mapping enables:
+      - Consistent service naming and categorization across all models
+      - Service-level cost aggregation and analysis
+      - Service category-based reporting and dashboards
+      - Standardized service classification for FinOps processes
+      - Cross-model service identification and mapping
+
+      Maintained as the single source of truth for AWS service categorization in the FinOps platform, ensuring consistent service classification across bronze, silver, and gold layer models.
+
+      Source CSV: https://github.com/ecos-labs/ecos/blob/main/code/dbt/seeds/aws/seed__aws_product_service_category.csv
+    columns:
+      - name: product_code
+        description: AWS product code identifier from billing data (e.g., AmazonEC2, AmazonS3)
+        data_type: varchar
+      - name: service_nice_name
+        description: Human-readable, standardized service name for reporting and dashboards
+        data_type: varchar
+      - name: service_category
+        description: High-level service category for grouping and analysis (e.g., Compute, Storage, Networking)
+        data_type: varchar
+
+  - name: seed__aws_regions
+    description: |
+      Comprehensive AWS region metadata including geographic coordinates, country information, and timezone data for location-based analysis, compliance reporting, and operational planning. Supports geographic cost analysis, data residency compliance, and regional optimization strategies.
+
+      Key applications:
+      - Geographic cost distribution analysis and visualization
+      - Data residency and compliance reporting by country/region
+      - Regional pricing and optimization analysis
+      - Multi-region architecture cost modeling
+      - Timezone-aware operational cost planning
+      - Geographic proximity analysis for data transfer optimization
+
+      Used by networking, compliance, and geographic analysis models to provide location context for cost optimization and operational decision making.
+
+      Source CSV: https://github.com/ecos-labs/ecos/blob/main/code/dbt/seeds/aws/seed__aws_regions.csv
+    columns:
+      - name: region_id
+        description: AWS region identifier code (e.g., us-east-1, eu-west-1, global). Primary key for region lookups.
+        data_type: varchar
+      - name: region_name
+        description: Human-readable AWS region display name (e.g., 'US East (N. Virginia)', 'EU (Frankfurt)', 'EU (Ireland)'). Used for reporting and mapping AWS billing display names to standardized region codes.
+        data_type: varchar
+      - name: region_country
+        description: Country where the AWS region is located
+        data_type: varchar
+      - name: region_city
+        description: Primary city/metropolitan area for the AWS region
+        data_type: varchar
+      - name: region_latitude
+        description: Geographic latitude coordinate for the region (decimal degrees)
+        data_type: decimal
+      - name: region_longitude
+        description: Geographic longitude coordinate for the region (decimal degrees)
+        data_type: decimal
+      - name: region_timezone
+        description: IANA timezone identifier for the region (e.g., America/New_York, Europe/London)
+        data_type: varchar

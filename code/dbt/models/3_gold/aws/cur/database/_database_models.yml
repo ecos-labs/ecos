@@ -1,0 +1,371 @@
+version: 2
+models:
+- name: gold_database__aurora_custom_monthly
+  description: |
+    Monthly analysis of AWS Aurora custom cluster costs and usage.
+    This model provides detailed cost breakdown and usage for customizable Aurora Global Database deployments, excluding backup costs. It requires configuration of cluster IDs and instance names via dbt variables.
+    Aurora Global Databases are comprised of multiple components, each of which appears as a separate line item in CUR. There is no overarching Aurora Global Database resource ID that can be used to filter query output.
+    To get an accurate picture of a specific Aurora Global DB deployment, the relevant cluster and database instance resource IDs in each region where the database is replicated must be added to the configuration variables.
+
+    Configuration Variables (via dbt model variables):
+    - primary_cluster_id: Primary region cluster ID (format: cluster-xxxxxxxxxxxxxxxxxxxxxxxx)
+    - secondary_cluster_id_1: Secondary region cluster ID
+    - secondary_cluster_id_n: Additional secondary region cluster IDs
+    - primary_cluster_db_instance_name_1: Primary region database instance name
+    - primary_cluster_db_instance_name_n: Additional primary region database instance names
+    - secondary_cluster_db_instance_name_1: Secondary region database instance name
+    - secondary_cluster_db_instance_name_n: Additional secondary region database instance names
+
+    The model automatically categorizes resources as Cluster, Database Instance, or Other, and identifies Primary vs Secondary regions based on the configured cluster IDs.
+  columns:
+  - name: day_usage_date
+    description: Day of usage.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: charge_type
+    description: AWS charge type (e.g., Usage, Fee).
+    data_type: varchar
+  - name: usage_type
+    description: AWS usage type.
+    data_type: varchar
+  - name: operation
+    description: AWS operation.
+    data_type: varchar
+  - name: item_description
+    description: Line item description.
+    data_type: varchar
+  - name: resource_id
+    description: AWS resource identifier.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Aggregated effective cost for the month.
+    data_type: decimal
+  - name: total_billed_cost
+    description: Total billed cost for the month.
+    data_type: decimal
+  - name: total_list_cost
+    description: Total list cost for the month.
+    data_type: decimal
+  - name: total_usage_amount
+    description: Total usage amount.
+    data_type: decimal
+  - name: resource_type
+    description: Resource type (e.g., Cluster, Database Instance, Other).
+    data_type: varchar
+  - name: cluster_region_type
+    description: Cluster region type (e.g., Primary or Secondary).
+    data_type: varchar
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: timestamp
+- name: gold_database__aurora_io_optimization_monthly
+  description: |
+    Monthly analysis of Aurora I/O optimization opportunities identifying clusters eligible for Aurora I/O-Optimized configuration.
+    Aurora I/O-Optimized provides improved price performance and predictable pricing for I/O-intensive applications.
+    Offers up to 40% cost savings for applications where I/O charges exceed 25% of total Aurora database spend.
+
+    Business Logic:
+    - AWS Guidance: I/O-Optimized beneficial when I/O costs > 25% of total Aurora spend
+    - Pricing model: Zero I/O charges, pay only for instances and storage
+    - Cost multipliers for I/O-Optimized: Compute 1.3x, Storage 2.25x (no I/O charges)
+    - Savings calculation: (Compute + Storage + I/O) - (1.3 * Compute + 2.25 * Storage)
+    - Query filter: Only returns clusters with positive savings (savings > 0)
+    - Note: 25% threshold is NOT enforced in query - users can calculate I/O percentage from returned columns
+
+    Performance Benefits:
+    - Increased throughput for I/O-intensive workloads
+    - Reduced latency for demanding applications
+    - Predictable pricing (no per-I/O charges)
+    - Better suited for high I/O operations (> 25% of costs)
+
+    Cost Components Analyzed:
+    - io_cost: Current I/O charges (Aurora:StorageIOUsage)
+    - compute_cost: Database instance costs (amortized with RI/SP)
+    - storage_cost: Aurora storage usage costs
+    - total_cost: Current total cost (compute + storage + I/O)
+    - io_optimized_cost: Projected cost with I/O-Optimized (1.3 * compute + 2.25 * storage)
+    - potential_savings: Difference between current and I/O-Optimized costs
+
+    Scope:
+    - Account-level analysis by default
+    - Supports cluster-level analysis via cost allocation tags
+    - Filters for Aurora MySQL and Aurora PostgreSQL engines
+    - Includes Serverless v1, v2, and provisioned instances
+
+    Filters Applied:
+    - Engines: Aurora MySQL, Aurora PostgreSQL (supported engines)
+    - Usage types:
+      * Aurora:StorageUsage (storage costs)
+      * Aurora:StorageIOUsage (I/O costs)
+      * InstanceUsage:db* (provisioned instances)
+      * Aurora:Serverless* (serverless v1 and v2)
+    - Line item types: Usage, DiscountedUsage (excludes fees)
+    - Resource IDs: cluster:cluster-* OR db:* patterns
+
+    Amortized Cost Handling:
+    - Computes amortized cost for reservations:
+      * DiscountedUsage: Uses reservation_effective_cost
+      * RIFee: Allocates unused upfront + recurring fees
+      * Fee with RI ARN: Excluded (covered by amortization)
+
+    Use Cases:
+    - Identify Aurora clusters with positive I/O-Optimized savings potential
+    - Calculate monthly savings potential from I/O-Optimized adoption
+    - Prioritize clusters by savings potential
+    - Calculate I/O cost percentage: (io_cost / total_cost) * 100 for comparison to 25% guideline
+
+    Recommendations:
+    - Review clusters with positive savings (already filtered)
+    - Calculate I/O percentage and prioritize those > 25% for maximum benefit
+    - Test performance after migration to validate improvements
+    - Monitor I/O patterns over multiple months for stable savings
+    - Use cost allocation tags for cluster-level analysis
+    - Review both cost savings and performance gains
+
+    Important Notes:
+    - Query returns ALL clusters with positive savings (not filtered by 25% threshold)
+    - Users should calculate I/O percentage: (io_cost / total_cost) * 100
+    - AWS recommends I/O-Optimized when I/O > 25%, but any positive savings may be beneficial
+    - Account-level analysis may mask cluster-level variations
+    - Tag-based filtering recommended for precise cluster-level insights
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: io_cost
+    description: Current I/O cost.
+    data_type: decimal
+  - name: compute_cost
+    description: Compute cost.
+    data_type: decimal
+  - name: storage_cost
+    description: Storage cost.
+    data_type: decimal
+  - name: total_cost
+    description: Total cost.
+    data_type: decimal
+  - name: io_optimized_cost
+    description: I/O cost with optimization.
+    data_type: decimal
+  - name: potential_savings
+    description: Potential monthly savings with I/O-optimized.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_database__database_summary_daily
+  description: |
+    Daily aggregation of database service costs by service, engine, and usage category, enabling granular cost tracking across all AWS database services.
+    Sources data from silver_aws__cur_enhanced covering RDS, DynamoDB, ElastiCache, OpenSearch, Redshift, DocumentDB, MemoryDB, and Neptune.
+
+    Key Features:
+    - Covers 8 database services: RDS, DynamoDB, ElastiCache, OpenSearch, Redshift, DocumentDB, MemoryDB, Neptune
+    - Service-specific categorization via dedicated mapping macros (aws_mappings_rds_category, aws_mappings_dynamodb_category, etc.)
+    - Engine-level breakdown for RDS and cache services (MySQL, PostgreSQL, Redis, etc.)
+    - Excludes data transfer costs for focused database compute/storage analysis
+    - Filters to running usage with positive effective costs
+
+    Use Cases:
+    - Track daily database costs by service and engine for chargeback
+    - Compare costs across different database services (RDS vs DynamoDB)
+    - Identify cost trends by database engine (MySQL vs PostgreSQL vs Aurora)
+    - Detect daily cost anomalies in database infrastructure
+    - Feed data into optimization models for RI/SP analysis
+
+    Important Notes:
+    - Data transfer costs excluded (see gold_network__data_transfer_daily)
+    - License model captured for BYOL vs License Included comparison
+    - Database category varies by service (e.g., Instance, Storage, I/O, Backup for RDS)
+  columns:
+  - name: usage_date
+    description: Date of usage aggregated to daily grain. All database costs for a given service/engine/category are summed.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier where the database resources are deployed.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer (management) account identifier for consolidated billing context.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code identifying the database service (AmazonRDS, AmazonDynamoDB, AmazonElastiCache, AmazonES, AmazonRedshift, AmazonDocDB, AmazonMemoryDB, AmazonNeptune).
+    data_type: varchar
+  - name: region_id
+    description: AWS region where the database resources are deployed (e.g., us-east-1, eu-west-1).
+    data_type: varchar
+  - name: database_category
+    description: Service-specific usage category from mapping macros. Examples include Instance, Storage, I/O, Backup, Serverless, Snapshot for RDS; ReadCapacityUnit, WriteCapacityUnit, Storage for DynamoDB.
+    data_type: varchar
+  - name: database_engine
+    description: Database engine type. For RDS/ElastiCache/MemoryDB uses the engine field; for others uses service-specific values (DocumentDB, Redshift, OpenSearch, Neptune, DynamoDB).
+    data_type: varchar
+  - name: license_model
+    description: Software license model from CUR (e.g., license-included, bring-your-own-license). Relevant for RDS Oracle and SQL Server instances.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for this service/engine/category on this day, accounting for discounts and credits.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier (YYYY-MM format) for invoice reconciliation.
+    data_type: varchar
+- name: gold_database__dynamodb_optimization_monthly
+  description: |
+    Monthly analysis of DynamoDB table class optimization opportunities.
+    Identifies DynamoDB tables that could save costs by switching to Standard-IA table class
+    based on access patterns and provides cost comparison calculations.
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: ddb_table_name
+    description: DynamoDB table name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: uses_reservations
+    description: Flag indicating if table uses reservations.
+    data_type: integer
+  - name: recommendation
+    description: Optimization recommendation.
+    data_type: varchar
+  - name: potential_savings_per_month
+    description: Potential monthly savings.
+    data_type: decimal
+  - name: avg_monthly_throughput_cost
+    description: Average monthly throughput cost.
+    data_type: decimal
+  - name: avg_monthly_storage_cost
+    description: Average monthly storage cost.
+    data_type: decimal
+  - name: avg_monthly_throughput_cost_ia
+    description: Average monthly throughput cost in IA class.
+    data_type: decimal
+  - name: avg_monthly_storage_cost_ia
+    description: Average monthly storage cost in IA class.
+    data_type: decimal
+  - name: total_monthly_cost
+    description: Total monthly cost.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_database__elasticache_optimization_monthly
+  description: |
+    Monthly analysis of ElastiCache optimization opportunities identifying clusters eligible for Valkey migration.
+    Valkey is a fork of Redis OSS offering 20% cost savings on ElastiCache. Returns self-designed (node-based) Redis OSS
+    clusters eligible for Valkey upgrade, current costs, and potential savings. Includes both On-Demand instances and
+    instances covered by Reserved Instance purchases.
+
+    Eligibility Criteria:
+    - Engine: Redis OSS (self-designed/node-based clusters)
+    - Deployment: Multi-AZ recommended for Valkey
+    - Cluster type: Node-based (not serverless)
+    - Savings: 20% cost reduction with Valkey engine
+
+    Upgrade Readiness Status:
+    - 'Already on Valkey': Cluster already migrated to Valkey engine
+    - 'Ready for Valkey': Redis OSS with Multi-AZ (meets all requirements)
+    - 'Enable Multi-AZ for Valkey': Single-AZ Redis (Multi-AZ enablement required)
+    - 'Check Configuration': Other configurations requiring review
+
+    Deployment Type Detection:
+    - Multi-AZ: Resource ID contains '-002' suffix (replica node)
+    - Single-AZ: No '-002' suffix found in resource IDs
+
+    RI Status Detection:
+    - RI Coverage: Usage type contains 'HeavyUsage' OR line_item_type = 'DiscountedUsage'
+    - On-Demand: Standard usage without RI coverage
+
+    Cost Calculation:
+    - monthly_effective_cost: Actual costs for the cluster (RI or On-Demand)
+    - estimated_valkey_cost: 80% of current cost (20% savings for Redis -> Valkey)
+    - potential_monthly_savings: Difference between current and Valkey costs
+
+    Cluster Identification:
+    - Regex removes node suffixes (-001, -002, -003, -004) to group by cluster
+    - Groups all nodes in a cluster for total cost calculation
+
+    Filters Applied:
+    - Product: AmazonElastiCache
+    - Line item types: Usage, DiscountedUsage
+    - Usage types: Contains 'Usage' (excludes 'BackupUsage')
+    - Engines: Redis, Valkey
+    - Resource ID: Must be non-null
+
+    Use Cases:
+    - Identify Redis OSS clusters for Valkey migration
+    - Calculate organization-wide ElastiCache savings potential
+    - Prioritize migrations by monthly cost savings
+    - Plan Multi-AZ enablement for Single-AZ clusters before migration
+    - Track RI-covered clusters requiring RI exchange/modification
+
+    Optimization Recommendations:
+    - Migrate Multi-AZ Redis clusters to Valkey for immediate 20% savings
+    - Enable Multi-AZ on Single-AZ clusters before Valkey migration
+    - For RI-covered clusters: Exchange RIs or wait for expiration before migration
+    - Test application compatibility with Valkey before production migration
+    - Monitor performance after migration to validate consistency
+
+    Important Notes:
+    - 20% savings applies to Redis -> Valkey migration only
+    - Multi-AZ requirement ensures high availability during migration
+    - RI-covered instances may require RI exchange for full savings realization
+    - Node-based clusters only (serverless ElastiCache uses different pricing)
+    - Results ordered by potential savings DESC for prioritization
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: engine
+    description: Cache engine (e.g., Redis, Memcached).
+    data_type: varchar
+  - name: instance_type
+    description: Instance type.
+    data_type: varchar
+  - name: cluster_name
+    description: Cluster name.
+    data_type: varchar
+  - name: deployment_type
+    description: Deployment type.
+    data_type: varchar
+  - name: ri_status
+    description: Reserved Instance status.
+    data_type: varchar
+  - name: valkey_upgrade_status
+    description: Valkey upgrade status.
+    data_type: varchar
+  - name: monthly_effective_cost
+    description: Monthly effective cost.
+    data_type: decimal
+  - name: estimated_valkey_cost
+    description: Estimated cost with Valkey.
+    data_type: decimal
+  - name: potential_monthly_savings
+    description: Potential monthly savings.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar

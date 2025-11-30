@@ -1,0 +1,170 @@
+version: 2
+
+data_tests:
+  - name: test_core__invoice_completeness_previous_month
+    description: |
+      Validates that previous month invoices are complete and have valid invoice IDs after a 15-day threshold.
+      If any issues are found after this threshold, the test fails and returns the offending records, ensuring trusted invoice data. The test can be scheduled (e.g. as a monthly job), and the 15-day threshold is fully configurable or can be removed to match your billing and reconciliation process.
+    config:
+      severity: error
+      error_if: ">= 1"  # Fail if any violations found
+  - name: test_seed__unmapped_product_codes
+    description: |
+      Data quality test that identifies AWS product codes (service_code) in CUR data that are not present in the seed__aws_product_service_category seed table.
+
+      Returns rows for unmapped product codes with cost impact and frequency metrics. Empty result indicates all product codes are properly mapped.
+
+      Use this test to:
+      - Identify new AWS services that need to be added to the seed table
+      - Quantify the cost impact of unmapped services
+      - Monitor seed table completeness over time
+    columns:
+      - name: service_code
+        description: AWS product code from CUR data that has no matching entry in seed table
+      - name: total_cost
+        description: Total effective cost for this unmapped product code across all time
+      - name: record_count
+        description: Number of CUR records with this unmapped product code
+      - name: first_seen_date
+        description: First date this product code appeared in CUR data
+      - name: last_seen_date
+        description: Most recent date this product code appeared in CUR data
+  - name: test_seed__unmapped_regions
+    description: |
+      Data quality test that identifies AWS regions in CUR data that are not present in the seed__aws_regions seed table.
+
+      Returns rows for unmapped regions with cost impact and frequency metrics. Empty result indicates all regions are properly mapped.
+
+      Use this test to:
+      - Identify new AWS regions that need to be added to the seed table
+      - Quantify the cost impact of unmapped regions
+      - Monitor seed table completeness for geographic analysis
+    columns:
+      - name: region
+        description: AWS region from CUR data that has no matching entry in seed table
+      - name: total_cost
+        description: Total effective cost for this unmapped region across all time
+      - name: record_count
+        description: Number of CUR records with this unmapped region
+      - name: first_seen_date
+        description: First date this region appeared in CUR data
+      - name: last_seen_date
+        description: Most recent date this region appeared in CUR data
+  - name: test_seed__unmapped_instance_families
+    description: |
+      Data quality test that identifies compute instance families in CUR data that are not present in the seed__aws_instance_modernization seed table.
+
+      Returns rows for unmapped instance family/product combinations with cost impact and frequency metrics. Empty result indicates all instance families are properly mapped.
+
+      Use this test to:
+      - Identify new instance families that need modernization guidance
+      - Quantify the cost impact of unmapped instance families
+      - Monitor seed table completeness for compute optimization features
+
+      Note: Checks instance families across EC2, RDS, ElastiCache, and OpenSearch services.
+    columns:
+      - name: instance_type_family
+        description: Instance family (e.g., m5, c5, r6g) that has no matching entry in seed table
+      - name: product
+        description: AWS product (AmazonEC2, AmazonRDS, AmazonElastiCache, AmazonES)
+      - name: total_cost
+        description: Total effective cost for this unmapped instance family/product combination
+      - name: record_count
+        description: Number of CUR records with this unmapped instance family
+      - name: first_seen_date
+        description: First date this instance family appeared in CUR data
+      - name: last_seen_date
+        description: Most recent date this instance family appeared in CUR data
+
+  - name: test_serve__cost_hierarchy_integrity
+    description: |
+      Validates that the cost hierarchy is maintained across all cost records:
+      total_list_cost >= total_billed_cost >= total_effective_cost
+
+      This test ensures:
+      - List prices (public catalog prices) are never lower than billed costs
+      - Billed costs are never lower than effective costs (after discounts)
+      - Discount calculations are properly applied throughout the cost hierarchy
+
+      The test returns violating records where the hierarchy is broken, which indicates:
+      - Potential data quality issues in upstream billing data
+      - Incorrect discount or credit applications
+      - Data processing errors in cost transformation pipeline
+
+      Returns up to 100 worst violations for debugging purposes.
+
+    config:
+      severity: error
+      error_if: ">= 1"
+      warn_if: ">= 50"
+
+  - name: test_serve__account_metadata_completeness
+    description: |
+      Validates that all accounts appearing in cost data have corresponding metadata entries.
+
+      This test ensures:
+      - All account_ids in cost data are present in the account metadata table
+      - All payer_account_ids in cost data are present in the account metadata table
+      - No orphaned cost records without account context
+      - Referential integrity between cost and metadata tables
+
+      The test returns accounts that appear in cost data but are missing from metadata, which could indicate:
+      - New accounts not yet processed in metadata refresh
+      - Data synchronization issues between cost and metadata pipelines
+      - Missing or incomplete account information
+
+      Results should be investigated and resolved by updating account metadata.
+
+    config:
+      severity: warn
+      error_if: ">= 100"
+      warn_if: ">= 10"
+
+  - name: test_serve__billing_period_consistency
+    description: |
+      Validates that the billing_period field matches the month of the usage_date field.
+
+      This test ensures:
+      - billing_period is in YYYY-MM format
+      - billing_period corresponds exactly to the usage_date month
+      - No data misalignment between temporal fields
+      - Consistent date handling across the data pipeline
+
+      The test returns records where billing_period doesn't match the usage_date month, which indicates:
+      - Data processing errors in date field generation
+      - Incorrect billing period assignment
+      - Potential issues with partition keys or time-based filtering
+
+      This is a critical data quality check as many downstream processes rely on billing_period for aggregation and filtering.
+
+      Returns up to 100 violations for analysis.
+
+    config:
+      severity: error
+      error_if: ">= 1"
+
+  - name: test_serve__no_negative_costs
+    description: |
+      Monitors for negative cost values in aggregated cost data.
+
+      AWS CUR legitimately includes negative costs for:
+      - Promotional credits and service credits
+      - Reserved Instance fee credits
+      - Refunds and billing adjustments
+      - Enterprise Discount Program (EdpDiscount)
+      - Tax refunds
+
+      This test uses WARN severity to flag patterns that may need investigation:
+      - Unusually high volume of negative costs (10+ records)
+      - Potential data aggregation issues
+      - Unexpected charge type patterns
+
+      Review flagged records to distinguish between:
+      - Expected: Credits, refunds, adjustments (normal AWS billing)
+      - Issues: Data processing errors, incorrect aggregation logic
+
+      Returns up to 100 records with negative costs for pattern analysis.
+
+    config:
+      severity: warn
+      warn_if: ">= 10"

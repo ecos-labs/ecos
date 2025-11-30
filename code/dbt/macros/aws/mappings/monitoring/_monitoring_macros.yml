@@ -1,0 +1,20 @@
+version: 2
+
+macros:
+  - name: aws_mappings_cloudwatch_category
+    description: >
+      Categorizes AWS CloudWatch usage types into business-friendly groupings.
+      Maps technical usage types to understandable categories for monitoring and alerting cost analysis.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_xray_category
+    description: >
+      Categorizes AWS X-Ray usage types for distributed tracing cost tracking.
+      Maps trace storage, retrieval, and insights features to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

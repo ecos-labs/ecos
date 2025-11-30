@@ -1,0 +1,564 @@
+version: 2
+models:
+- name: silver_aws__cur_enhanced
+  description: |
+    Enhanced AWS Cost and Usage Report data with comprehensive business logic and categorization.
+    This is the foundational silver layer model that transforms raw CUR data into a standardized format with advanced service mappings, cost calculations, and domain classifications.
+
+    Key enhancements:
+    - Service name standardization and category mapping
+    - Purchase option classification (OnDemand, Reserved, SavingsPlan, Spot, Marketplace)
+    - Charge category classification (Usage, Purchase, Tax, Credit, Adjustment)
+    - Compute instance metadata (type, size, operating system, processor family, engine)
+    - Cost calculations (effective, billed, contracted, list costs)
+    - Savings Plans and Reserved Instance processing
+    - Resource identifier normalization
+    - Dynamic resource tag inclusion
+
+    Note: Does not include any split cost allocation (EKSPod-EC2, ECSTask-EC2).
+  columns:
+  - name: usage_date
+    description: UTC timestamp for the usage date.
+    data_type: timestamp
+  - name: account_id
+    description: Account ID that incurred the usage.
+    data_type: varchar
+  - name: account_name
+    description: Account name that incurred the usage.
+    data_type: varchar
+  - name: payer_account_id
+    description: Payer account ID responsible for the charges.
+    data_type: varchar
+  - name: payer_account_name
+    description: Payer account name responsible for the charges.
+    data_type: varchar
+  - name: billing_entity
+    description: Billing entity indicating AWS or AWS Marketplace.
+    data_type: varchar
+  - name: provider_name
+    description: Cloud provider name.
+    data_type: varchar
+  - name: bill_type
+    description: Bill type for the charge (Anniversary, Purchase, or Refund).
+    data_type: varchar
+  - name: invoicing_entity
+    description: AWS entity that issued the invoice.
+    data_type: varchar
+  - name: invoice_id
+    description: Invoice identifier associated with the charge.
+    data_type: varchar
+  - name: legal_entity
+    description: Seller of record for the product.
+    data_type: varchar
+  - name: billing_period_start_date
+    description: Start timestamp for the billing period.
+    data_type: timestamp
+  - name: billing_period_end_date
+    description: End timestamp for the billing period.
+    data_type: timestamp
+  - name: service_category
+    description: Standardized service category classification.
+    data_type: varchar
+  - name: service_name
+    description: Standardized service name.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code identifier.
+    data_type: varchar
+  - name: subservice_code
+    description: AWS subservice code for finer service detail.
+    data_type: varchar
+  - name: product_family
+    description: AWS product family classification.
+    data_type: varchar
+  - name: product_group
+    description: AWS product group attribute.
+    data_type: varchar
+  - name: charge_type
+    description: Charge classification such as Usage, Tax, Credit, or Fee.
+    data_type: varchar
+  - name: charge_category
+    description: Standardized charge category label.
+    data_type: varchar
+  - name: is_running_usage
+    description: Flag indicating whether the record represents running usage.
+    data_type: boolean
+  - name: purchase_option
+    description: Purchase option classification such as OnDemand, Reserved, SavingsPlan, Spot, or Marketplace.
+    data_type: varchar
+  - name: usage_type
+    description: Usage type describing the record.
+    data_type: varchar
+  - name: operation
+    description: AWS operation associated with the usage.
+    data_type: varchar
+  - name: item_description
+    description: Line item description provided by AWS.
+    data_type: varchar
+  - name: availability_zone
+    description: Availability Zone where the resource ran.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global) from seed__aws_regions.
+    data_type: varchar
+  - name: region_name
+    description: Human-readable AWS region display name (e.g., 'US East (N. Virginia)', 'EU (Ireland)') from seed__aws_regions.
+    data_type: varchar
+  - name: product_from_location
+    description: Source location associated with the usage or transfer.
+    data_type: varchar
+  - name: product_to_location
+    description: Destination location associated with the usage or transfer.
+    data_type: varchar
+  - name: product_attachment_type
+    description: Attachment type metadata for the service.
+    data_type: varchar
+  - name: resource_id
+    description: Normalized AWS resource identifier with ARN prefixes removed.
+    data_type: varchar
+  - name: resource_name
+    description: Human-readable resource name.
+    data_type: varchar
+  - name: resource_type
+    description: Resource type classification.
+    data_type: varchar
+  - name: instance_type
+    description: Full instance type identifier.
+    data_type: varchar
+  - name: instance_type_family
+    description: Instance family classification for compute services.
+    data_type: varchar
+  - name: instance_type_family_long
+    description: Descriptive instance family label for reporting.
+    data_type: varchar
+  - name: instance_size
+    description: Instance size designation such as micro, large, or xlarge.
+    data_type: varchar
+  - name: engine
+    description: Engine associated with the resource, such as database or cache.
+    data_type: varchar
+  - name: operating_system
+    description: Operating system running on the resource.
+    data_type: varchar
+  - name: tenancy
+    description: Instance tenancy setting.
+    data_type: varchar
+  - name: license_model
+    description: Software license model.
+    data_type: varchar
+  - name: processor_type
+    description: Processor type identifier used for analytics.
+    data_type: varchar
+  - name: processor_family
+    description: Processor family classification such as Intel, AMD, or Graviton.
+    data_type: varchar
+  - name: processor_features
+    description: Processor feature metadata.
+    data_type: varchar
+  - name: processor_architecture
+    description: Processor architecture for the workload.
+    data_type: varchar
+  - name: vcpu
+    description: Reported vCPU count.
+    data_type: string
+  - name: vcpu_normalized
+    description: Normalized vCPU value for size flexibility analysis.
+    data_type: decimal
+  - name: memory
+    description: Reported memory allocation.
+    data_type: string
+  - name: gpu_memory
+    description: Reported GPU memory allocation.
+    data_type: string
+  - name: deployment_option
+    description: Deployment option such as Multi-AZ or Serverless.
+    data_type: varchar
+  - name: storage
+    description: Storage configuration details.
+    data_type: varchar
+  - name: volume_type
+    description: EBS volume type.
+    data_type: varchar
+  - name: volume_api_name
+    description: EBS volume API name.
+    data_type: varchar
+  - name: resource_tags
+    description: Map of enabled cost allocation tags.
+    data_type: map<string,string>
+  - name: pricing_purchase_option
+    description: Purchase option metadata from pricing.
+    data_type: varchar
+  - name: pricing_offering_class
+    description: Reserved Instance offering class from pricing metadata.
+    data_type: varchar
+  - name: pricing_lease_contract_length
+    description: Reserved Instance lease contract length from pricing metadata.
+    data_type: varchar
+  - name: pricing_unit
+    description: Unit used to price the usage.
+    data_type: varchar
+  - name: pricing_term
+    description: Pricing term describing reserved versus on-demand.
+    data_type: varchar
+  - name: sku_id
+    description: Product SKU identifier.
+    data_type: varchar
+  - name: ri_sp_arn
+    description: Reserved Instance or Savings Plan Amazon Resource Name.
+    data_type: varchar
+  - name: ri_sp_term
+    description: Term length for the Reserved Instance or Savings Plan.
+    data_type: varchar
+  - name: ri_sp_offering
+    description: Offering type for the Reserved Instance or Savings Plan.
+    data_type: varchar
+  - name: ri_sp_payment
+    description: Payment option selected for the Reserved Instance or Savings Plan.
+    data_type: varchar
+  - name: ri_sp_start_date
+    description: Start date for the Reserved Instance or Savings Plan commitment.
+    data_type: date
+  - name: ri_sp_end_date
+    description: End date for the Reserved Instance or Savings Plan commitment.
+    data_type: date
+  - name: ri_sp_trueup
+    description: True-up amount applied to align Reserved Instance or Savings Plan commitments.
+    data_type: decimal
+  - name: ri_sp_upfront_fees
+    description: Upfront fees charged for the Reserved Instance or Savings Plan.
+    data_type: decimal
+  - name: ri_sp_effective_cost
+    description: Effective cost attributed to the Reserved Instance or Savings Plan.
+    data_type: decimal
+  - name: savings_plan_total_commitment_to_date
+    description: Cumulative Savings Plan commitment consumed to date.
+    data_type: decimal
+  - name: savings_plan_used_commitment
+    description: Savings Plan commitment amount consumed.
+    data_type: decimal
+  - name: savings_plan_recurring_commitment_for_billing_period
+    description: Recurring Savings Plan commitment charged during the billing period.
+    data_type: decimal
+  - name: savings_plan_amortized_upfront_commitment_for_billing_period
+    description: Amortized Savings Plan upfront commitment charged during the billing period.
+    data_type: decimal
+  - name: reservation_unused_amortized_upfront_fee_for_billing_period
+    description: Unused amortized upfront Reserved Instance amount for the billing period.
+    data_type: decimal
+  - name: reservation_unused_recurring_fee
+    description: Unused recurring Reserved Instance fee.
+    data_type: decimal
+  - name: reservation_amortized_upfront_fee_for_billing_period
+    description: Amortized upfront Reserved Instance amount for the billing period.
+    data_type: decimal
+  - name: normalized_usage_amount
+    description: Usage converted to normalized units for size flexibility.
+    data_type: decimal
+  - name: usage_amount
+    description: Usage quantity for the line item.
+    data_type: decimal
+  - name: contracted_unit_price
+    description: Contracted price per unit of usage.
+    data_type: decimal
+  - name: list_unit_price
+    description: Public list price per unit of usage.
+    data_type: decimal
+  - name: effective_cost
+    description: Amortized charge amount after applying reduced rates, discounts, and allocated portions of prepaid
+      commitments in the billing currency.
+    data_type: decimal
+  - name: billed_cost
+    description: Charge amount used for invoicing, reflecting reduced rates and discounts but excluding amortized
+      prepaid commitments.
+    data_type: decimal
+  - name: contracted_cost
+    description: Charge amount computed from contracted unit price times pricing quantity in the billing currency,
+      defaulting to list cost when no negotiated discount exists.
+    data_type: decimal
+  - name: list_cost
+    description: Charge amount computed from list unit price times pricing quantity in the billing currency and used as
+      the baseline for savings comparisons.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period in YYYY-MM format.
+    data_type: varchar
+- name: silver_aws__cost_daily
+  description: |
+    Daily cost and usage rollup derived from the silver_aws__cur_enhanced model.
+    Provides the canonical daily grain for charge reconciliation, trend tracking, and anomaly detection.
+
+    Highlights:
+    - Daily time grain aggregation with various granular attributes (usage_type, operation, item description)
+    - Aggregates effective, billed and list cost metrics alongside usage quantity
+    - Retains account, service, region, purchase, pricing and line item attributes
+  columns:
+  - name: usage_date
+    description: UTC timestamp for the usage date.
+    data_type: timestamp
+  - name: account_id
+    description: Account ID that incurred the usage.
+    data_type: varchar
+  - name: payer_account_id
+    description: Payer account ID responsible for the charges.
+    data_type: varchar
+  - name: billing_entity
+    description: Billing entity indicating AWS or AWS Marketplace.
+    data_type: varchar
+  - name: service_category
+    description: Standardized service category classification.
+    data_type: varchar
+  - name: service_name
+    description: Standardized service name.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code identifier.
+    data_type: varchar
+  - name: subservice_code
+    description: AWS subservice code for finer service detail.
+    data_type: varchar
+  - name: product_family
+    description: AWS product family classification.
+    data_type: varchar
+  - name: usage_type
+    description: Usage type describing the record.
+    data_type: varchar
+  - name: operation
+    description: AWS operation associated with the usage.
+    data_type: varchar
+  - name: item_description
+    description: Line item description provided by AWS.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global) from seed__aws_regions.
+    data_type: varchar
+  - name: region_name
+    description: Human-readable AWS region display name (e.g., 'US East (N. Virginia)', 'EU (Ireland)') from seed__aws_regions.
+    data_type: varchar
+  - name: charge_type
+    description: Charge classification such as Usage, Tax, Credit, or Fee.
+    data_type: varchar
+  - name: purchase_option
+    description: Purchase option classification such as OnDemand, Reserved, SavingsPlan, Spot, or Marketplace.
+    data_type: varchar
+  - name: is_running_usage
+    description: Flag indicating whether the record represents running usage.
+    data_type: boolean
+  - name: pricing_unit
+    description: Unit used to price the usage.
+    data_type: varchar
+  - name: pricing_term
+    description: Pricing term describing reserved versus on-demand.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Sum of effective cost for the aggregation period.
+    data_type: decimal
+  - name: total_billed_cost
+    description: Sum of billed cost for the aggregation period.
+    data_type: decimal
+  - name: total_list_cost
+    description: Sum of list cost for the aggregation period.
+    data_type: decimal
+  - name: total_usage_amount
+    description: Total usage quantity aggregated for the day.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period in YYYY-MM format.
+    data_type: varchar
+- name: silver_aws__compute_instance_hourly
+  description: |
+    Hourly aggregated compute instance data from enhanced CUR, focusing on running compute resources across EC2, RDS, ElastiCache, and other compute services. Includes normalization factors for rightsizing analysis and Graviton processor identification.
+
+    This model filters for:
+    - Running usage only (excludes fees, data transfer, etc.)
+    - Compute services (EC2, RDS, ElastiCache, EMR, etc.)
+    - Instance-based operations
+    - Daily grain aggregation
+    - Graviton processor detection for migration opportunities
+  columns:
+  - name: usage_date
+    description: UTC timestamp for the usage date.
+    data_type: timestamp
+  - name: account_id
+    description: Account ID that incurred the usage.
+    data_type: varchar
+  - name: payer_account_id
+    description: Payer account ID responsible for the charges.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code identifier.
+    data_type: varchar
+  - name: service_name
+    description: Standardized service name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global) from seed__aws_regions.
+    data_type: varchar
+  - name: purchase_option
+    description: Purchase option classification such as OnDemand, Reserved, SavingsPlan, Spot, or Marketplace.
+    data_type: varchar
+  - name: charge_type
+    description: Charge classification such as Usage, Tax, Credit, or Fee.
+    data_type: varchar
+  - name: ri_sp_term
+    description: Term length for the Reserved Instance or Savings Plan.
+    data_type: varchar
+  - name: resource_id
+    description: Normalized AWS resource identifier with ARN prefixes removed.
+    data_type: varchar
+  - name: instance_type
+    description: Full instance type identifier.
+    data_type: varchar
+  - name: instance_type_family
+    description: Instance family classification for compute services.
+    data_type: varchar
+  - name: instance_type_details
+    description: Struct containing instance size, vCPU counts, normalized vCPU, memory, and GPU memory.
+    data_type: struct<size:string,vcpu:string,vcpu_normalized:double,memory:string,gpu_memory:string>
+  - name: engine
+    description: Engine associated with the resource, such as database or cache.
+    data_type: varchar
+  - name: operating_system
+    description: Operating system running on the resource.
+    data_type: varchar
+  - name: tenancy
+    description: Instance tenancy setting.
+    data_type: varchar
+  - name: license_model
+    description: Software license model.
+    data_type: varchar
+  - name: processor_type
+    description: Processor type identifier used for analytics.
+    data_type: varchar
+  - name: processor_family
+    description: Processor family classification such as Intel, AMD, or Graviton.
+    data_type: varchar
+  - name: processor_features
+    description: Processor feature metadata.
+    data_type: varchar
+  - name: processor_architecture
+    description: Processor architecture for the workload.
+    data_type: varchar
+  - name: is_graviton
+    description: Flag indicating whether the instance uses AWS Graviton processors.
+    data_type: boolean
+  - name: usage_amount
+    description: Usage quantity for the record.
+    data_type: decimal
+  - name: normalized_usage_amount
+    description: Usage converted to normalized units for size flexibility.
+    data_type: decimal
+  - name: effective_cost
+    description: Amortized charge amount after applying reduced rates, discounts, and allocated portions of prepaid
+      commitments in the billing currency.
+    data_type: decimal
+  - name: billed_cost
+    description: Charge amount used for invoicing, reflecting reduced rates and discounts but excluding amortized
+      prepaid commitments.
+    data_type: decimal
+  - name: contracted_cost
+    description: Charge amount computed from contracted unit price times pricing quantity in the billing currency,
+      defaulting to list cost when no negotiated discount exists.
+    data_type: decimal
+  - name: list_cost
+    description: Charge amount computed from list unit price times pricing quantity in the billing currency and used as
+      the baseline for savings comparisons.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period in YYYY-MM format.
+    data_type: varchar
+- name: silver_aws__container_daily
+  description: |
+    Daily aggregated container costs for ECS and EKS services with task and cluster details.
+    This model focuses on container-specific costs and usage patterns, including Fargate and EC2-backed container services.
+
+    Key features:
+    - Container service filtering (ECS, EKS, Fargate)
+    - Task and cluster level aggregation
+    - Container-specific usage categories
+    - Daily grain for trend analysis
+    - Foundation for container cost allocation
+  columns:
+  - name: usage_date
+    description: UTC timestamp for the usage date.
+    data_type: timestamp
+  - name: account_id
+    description: Account ID that incurred the usage.
+    data_type: varchar
+  - name: payer_account_id
+    description: Payer account ID responsible for the charges.
+    data_type: varchar
+  - name: container_platform
+    description: Container platform designation such as ECS or EKS.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code identifier.
+    data_type: varchar
+  - name: service_name
+    description: Standardized service name.
+    data_type: varchar
+  - name: operation
+    description: AWS operation associated with the usage.
+    data_type: varchar
+  - name: usage_type
+    description: Usage type describing the record.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global) from seed__aws_regions.
+    data_type: varchar
+  - name: resource_id
+    description: Normalized AWS resource identifier with ARN prefixes removed.
+    data_type: varchar
+  - name: resource_name
+    description: Human-readable resource name.
+    data_type: varchar
+  - name: cluster_name
+    description: Container cluster name.
+    data_type: varchar
+  - name: service_name_ecs
+    description: ECS service name extracted from container metadata.
+    data_type: varchar
+  - name: compute_type
+    description: Container compute type such as Fargate or EC2.
+    data_type: varchar
+  - name: resource_dimension
+    description: Container resource dimension used for cost allocation.
+    data_type: varchar
+  - name: charge_type
+    description: Charge classification such as Usage, Tax, Credit, or Fee.
+    data_type: varchar
+  - name: purchase_option
+    description: Purchase option classification such as OnDemand, Reserved, SavingsPlan, Spot, or Marketplace.
+    data_type: varchar
+  - name: pricing_unit
+    description: Unit used to price the usage.
+    data_type: varchar
+  - name: total_usage_amount
+    description: Total usage quantity aggregated for the day.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Sum of effective cost for the aggregation period.
+    data_type: decimal
+  - name: total_billed_cost
+    description: Sum of billed cost for the aggregation period.
+    data_type: decimal
+  - name: total_list_cost
+    description: Sum of list cost for the aggregation period.
+    data_type: decimal
+  - name: cost_per_unit
+    description: Cost per pricing unit after aggregation.
+    data_type: decimal
+  - name: vcpu_cost
+    description: Cost attributed to vCPU resources.
+    data_type: decimal
+  - name: memory_cost
+    description: Cost attributed to memory resources.
+    data_type: decimal
+  - name: fargate_cost
+    description: Portion of the cost attributed to AWS Fargate usage.
+    data_type: decimal
+  - name: ec2_cost
+    description: Portion of the cost attributed to backing EC2 resources.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period in YYYY-MM format.
+    data_type: varchar

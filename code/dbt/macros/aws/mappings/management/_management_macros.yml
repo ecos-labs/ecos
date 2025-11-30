@@ -1,0 +1,29 @@
+version: 2
+
+macros:
+  - name: aws_mappings_awssupport_category
+    description: >
+      Categorizes AWS Support Enterprise usage types for support cost tracking.
+      Maps enterprise support charges and other support costs to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_compute_savings_plans_category
+    description: >
+      Categorizes Compute Savings Plans usage types for cost commitment tracking.
+      Maps 1-year and 3-year savings plans with different payment options to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_cost_explorer_category
+    description: >
+      Categorizes AWS Cost Explorer usage types for cost management tool tracking.
+      Maps API requests and usage reports to cost categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

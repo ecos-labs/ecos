@@ -1,0 +1,210 @@
+version: 2
+
+macros:
+  - name: assert_equal
+    description: >
+      Assertion helper for equality testing
+      Checks if two values are equal. Raises a compiler error if they don't match,
+      logs success if they do. Used in test macros for validation.
+    arguments:
+      - name: actual
+        type: any
+        description: The actual value from the test.
+      - name: expected
+        type: any
+        description: The expected value.
+      - name: test_name
+        type: string
+        description: Descriptive name for the test case.
+
+  - name: assert_contains
+    description: >
+      Assertion helper for string containment testing
+      Checks if a string contains a substring. Raises a compiler error if not found,
+      logs success if found.
+    arguments:
+      - name: haystack
+        type: string
+        description: The string to search in.
+      - name: needle
+        type: string
+        description: The substring to search for.
+      - name: test_name
+        type: string
+        description: Descriptive name for the test case.
+
+  - name: assert_not_none
+    description: >
+      Assertion helper for non-null testing
+      Checks if a value is not none. Raises a compiler error if none,
+      logs success otherwise.
+    arguments:
+      - name: value
+        type: any
+        description: The value to check.
+      - name: test_name
+        type: string
+        description: Descriptive name for the test case.
+
+  - name: assert_in_list
+    description: >
+      Assertion helper for list membership testing
+      Checks if a value is in a list of valid values.
+    arguments:
+      - name: value
+        type: any
+        description: The value to check.
+      - name: list_values
+        type: list
+        description: List of valid values.
+      - name: test_name
+        type: string
+        description: Descriptive name for the test case.
+
+  - name: test_subtract_months
+    description: >
+      Unit tests for subtract_months() helper function
+      Comprehensive test suite for date arithmetic across various scenarios:
+      - Basic month subtraction (e.g., 6 months, 3 months)
+      - Year boundary crossing (e.g., Jan - 3 months = Oct previous year)
+      - February handling (including leap years)
+      - Edge cases (e.g., 0 months, multiple years)
+      - User-provided test cases
+      Total test cases: 14
+      How to run:
+      ```bash
+      cd code/dbt && dbt compile --select test_materialization
+      ```
+
+  - name: test_get_model_config
+    description: >
+      Integration tests for get_model_config() macro
+      Tests configuration generation for different materialization types:
+      - View configuration
+      - Table configuration (e.g., Parquet/Hive vs Iceberg)
+      - Incremental configuration
+      - Config dictionary structure
+      - Incremental strategy settings
+      - Partitioning configuration
+      Note: Some tests depend on global vars:
+      - `materialization_mode` (e.g., 'view' or 'smart')
+      - `iceberg_enabled` (e.g., true or false)
+      Total test cases: 10+
+      How to run:
+      ```bash
+      cd code/dbt && dbt compile --select test_materialization
+      ```
+
+  - name: test_get_model_time_filter
+    description: >
+      Integration tests for get_model_time_filter() macro
+      Tests filter generation for different scenarios:
+      - Default billing_period column filtering
+      - Explicit billing_period column filtering
+      - Date/timestamp column filtering (e.g., usage_date, line_item_usage_start_date)
+      - Date parsing and date_add functions
+      - Filter format validation
+      - String return type verification
+      Note: Tests depend on:
+      - `--full-refresh` flag (for full refresh mode testing)
+      - `billing_period_start` and `billing_period_end` vars
+      - Current date (for date range calculations)
+      Total test cases: 10+
+      How to run:
+      ```bash
+      # Normal incremental mode
+      cd code/dbt && dbt compile --select test_materialization
+      # Full refresh mode
+      cd code/dbt && dbt compile --select test_materialization --full-refresh
+      ```
+
+  - name: test_error_cases
+    description: >
+      Negative/error tests for materialization framework
+      Comprehensive error handling and edge case testing to ensure the framework
+      handles invalid inputs gracefully without crashes. Tests verify fallback to
+      safe defaults and proper warning messages.
+      Test categories:
+      - Invalid materialization_mode values (non-'view'/'smart' behave like 'smart')
+      - Malformed billing_period_start (e.g., invalid months, wrong format, wrong separator)
+      - Malformed billing_period_end (same validations as start)
+      - Invalid billing_period ranges (e.g., end < start)
+      - Invalid billing_lookback_months (e.g., negative, zero, non-numeric)
+      - Invalid materialization type overrides (non-standard types)
+      - Edge cases in time filter generation
+      - Config generation resilience
+      Error handling philosophy:
+      - System should NOT crash on invalid inputs
+      - Should fall back to safe defaults (e.g., 6 months, 'view' materialization)
+      - Should log warnings for invalid values
+      - Config generation should always return valid dictionaries
+      Total test cases: 20+
+      How to run:
+      ```bash
+      cd code/dbt && dbt run-operation run_all_tests
+      ```
+      To test specific error scenarios:
+      ```bash
+      # 1. Set invalid values in dbt_project.yml
+      vars:
+        billing_period_start: '2024-13'  # Invalid month
+        billing_lookback_months: -5       # Negative value
+      # 2. Run tests
+      cd code/dbt && dbt run-operation run_all_tests
+      # 3. Look for ⚠️ warnings and verify graceful handling
+      ```
+      Example invalid inputs tested:
+      - `billing_period_start: '2024-13'` (Month out of range)
+      - `billing_period_start: 'invalid'` (Non-date string)
+      - `billing_period_start: '2024-1'` (Month not zero-padded)
+      - `billing_period_start: '2024/01'` (Wrong separator)
+      - `billing_lookback_months: -5` (Negative value)
+      - `billing_lookback_months: 0` (Zero value)
+      - `materialization_overrides: {model: 'invalid_type'}` (Invalid type)
+
+  - name: run_all_tests
+    description: >
+      Test orchestration operation for materialization framework
+      Wrapper operation that executes all materialization macro tests via `dbt run-operation`.
+      Allows tests to run outside model context to prevent automatic execution during normal dbt operations.
+      Usage:
+      ```bash
+      dbt run-operation run_all_tests
+      ```
+      Note: Some tests like override priority tests require model context and are skipped.
+      For full test coverage, use: `dbt compile --select test_materialization`
+
+  - name: test_get_materialization_type
+    description: >
+      Unit tests for get_materialization_type() helper function
+      Comprehensive test suite for materialization type resolution logic.
+      Tests the three-tier priority system (override > mode > default).
+      Test groups:
+      - Default materialization (view, table, incremental)
+      - Mode override ('view' mode forces all to view)
+      - Override priority (highest priority when configured)
+      - Priority system verification (override > mode > default)
+      - Edge cases (empty model names, non-existent models)
+      - Return type validation (string type, valid values)
+      Total test cases: 20+
+      How to run:
+      ```bash
+      cd code/dbt && dbt compile --select test_materialization
+      ```
+
+  - name: test_validate_lookback_months
+    description: >
+      Unit tests for validate_lookback_months() helper function
+      Comprehensive test suite for billing lookback months validation logic.
+      Tests validation of positive integers and fallback to defaults.
+      Test groups:
+      - Valid integers (1, 6, 12, 999)
+      - Invalid inputs defaulting to 6 (zero, negative, non-numeric, null)
+      - Default behavior (reading from vars when not provided)
+      - Boundary cases (1 minimum, 10000+ maximum)
+      - Return type validation (number type, positive integers)
+      Total test cases: 15+
+      How to run:
+      ```bash
+      cd code/dbt && dbt compile --select test_materialization
+      ```

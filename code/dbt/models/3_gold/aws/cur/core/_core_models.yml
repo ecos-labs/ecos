@@ -1,0 +1,383 @@
+version: 2
+models:
+- name: gold_core__resource_tag_daily
+  description: |
+    Daily aggregated cost and usage data grouped by AWS resources with dynamic resource tag support.
+    Focuses on resources with running usage and includes all available resource tags for detailed analysis.
+    Essential for resource-level cost optimization, chargeback reporting, and resource tagging strategies.
+
+    Key Features:
+    - Filters for running usage only
+    - Dynamic resource tag columns based on available tags in the data
+    - Resource-level cost aggregation and usage tracking
+    - Supports chargeback and showback reporting
+    - Foundation for resource trend analysis
+    - Dynamically includes all resource tag columns available from the source data
+  columns:
+  - name: usage_date
+    description: Date of usage truncated to day.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: billing_entity
+    description: AWS billing entity.
+    data_type: varchar
+  - name: legal_entity
+    description: Legal entity for billing.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: service_name
+    description: AWS service name.
+    data_type: varchar
+  - name: service_category
+    description: Service category classification.
+    data_type: varchar
+  - name: product_family
+    description: AWS product family.
+    data_type: varchar
+  - name: region_id
+    description: AWS region identifier.
+    data_type: varchar
+  - name: resource_id
+    description: AWS resource identifier.
+    data_type: varchar
+  - name: resource_name
+    description: AWS resource name/identifier.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for the day.
+    data_type: decimal
+  - name: total_usage_amount
+    description: Total usage amount for the day.
+    data_type: decimal
+  - name: total_normalized_usage_amount
+    description: Total normalized usage amount.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+  - name: resource_tags_*
+    description: Dynamic resource tag columns (e.g., resource_tags_application, resource_tags_environment), varies based
+      on tags present in source data.
+    data_type: varchar
+- name: gold_core__service_daily
+  description: |
+    Daily aggregated cost data grouped by AWS services for high-level service cost analysis.
+    Provides service-level cost trends and is optimized for service-level reporting and dashboards.
+    Built on top of the detailed cost model with service-level aggregation.
+
+    Key Features:
+    - Service-level cost aggregation from detailed cost model
+    - Service categorization for enhanced reporting
+    - Optimized for dashboards and high-level cost analysis
+    - Foundation for service trend analysis
+    - Supports service-level cost allocation and budgeting
+  columns:
+  - name: usage_date
+    description: Date of usage truncated to day.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: billing_entity
+    description: AWS billing entity.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: service_name
+    description: AWS service name.
+    data_type: varchar
+  - name: service_category
+    description: AWS service category.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for the day.
+    data_type: decimal
+  - name: total_billed_cost
+    description: Total billed cost for the day.
+    data_type: decimal
+  - name: total_list_cost
+    description: Total list cost for the day.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_core__service_monthly
+  description: |
+    Monthly aggregated cost data grouped by AWS services for high-level service cost analysis.
+    Provides service-level cost trends with month normalization for accurate comparisons.
+    Built on top of the daily service costs model with monthly aggregation.
+
+    Key Features:
+    - Monthly service-level cost aggregation
+    - Service categorization for enhanced reporting
+    - 30-day normalized costs for consistent comparison
+    - Foundation for monthly budgeting and forecasting
+    - Supports service-level cost allocation
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: billing_entity
+    description: AWS billing entity.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: service_name
+    description: AWS service name.
+    data_type: varchar
+  - name: service_category
+    description: AWS service category.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for the month.
+    data_type: decimal
+  - name: total_effective_cost_normalized
+    description: Normalized monthly cost (30-day normalized for comparison).
+    data_type: decimal
+  - name: total_change
+    description: Total change from previous period.
+    data_type: decimal
+  - name: total_change_normalized
+    description: Normalized total change from previous period.
+    data_type: decimal
+  - name: pct_change
+    description: Percentage change from previous period.
+    data_type: decimal
+  - name: pct_change_normalized
+    description: Normalized percentage change from previous period.
+    data_type: decimal
+  - name: rank_position
+    description: Ranking position by cost.
+    data_type: integer
+  - name: is_top_50_mover
+    description: Flag indicating if top 50 cost mover.
+    data_type: boolean
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_core__resource_monthly
+  description: |
+    Monthly aggregated cost and usage data grouped by AWS resources with dynamic resource tag support.
+    Provides resource-level cost trends with month normalization for accurate comparisons.
+    Essential for resource-level cost optimization and monthly chargeback reporting.
+
+    Key Features:
+    - Monthly resource-level cost aggregation
+    - Dynamic resource tag columns based on available tags
+    - 30-day normalized costs for consistent comparison
+    - Foundation for monthly resource optimization
+    - Supports resource-level budgeting and forecasting
+  columns:
+  - name: usage_date
+    description: Month of usage - truncated to first day of month.
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: billing_entity
+    description: AWS billing entity.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: service_name
+    description: AWS service name.
+    data_type: varchar
+  - name: region_id
+    description: AWS region identifier.
+    data_type: varchar
+  - name: resource_name
+    description: AWS resource name/identifier.
+    data_type: varchar
+  - name: resource_tags_*
+    description: Dynamic resource tag columns, varies based on tags present in source data.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for the month.
+    data_type: decimal
+  - name: total_effective_cost_normalized
+    description: Normalized monthly cost (30-day normalized for comparison).
+    data_type: decimal
+  - name: total_change
+    description: Total cost change from previous period.
+    data_type: decimal
+  - name: total_change_normalized
+    description: Normalized cost change.
+    data_type: decimal
+  - name: pct_change
+    description: Percentage cost change.
+    data_type: decimal
+  - name: pct_change_normalized
+    description: Normalized percentage change.
+    data_type: decimal
+  - name: rank_position
+    description: Rank position for cost tracking.
+    data_type: integer
+  - name: is_top_50_mover
+    description: Flag indicating top 50 cost mover.
+    data_type: boolean
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_core__invoice_monthly
+  description: |
+    Invoice-level aggregations from AWS CUR data with completeness tracking and summary statistics.
+    Provides invoice-level summaries, billing period analysis, and helps monitor billing data availability.
+    Essential for financial reconciliation, billing completeness validation, and invoice analysis.
+
+    Key Features:
+    - Invoice-level cost aggregation across all cost types
+    - Billing period and invoice completeness tracking
+    - Summary statistics (account count, service count, region count)
+    - Usage date range tracking per invoice
+    - Multiple cost types (effective, billed, contracted, list)
+    - Completeness validation for billing reconciliation
+  columns:
+  - name: usage_date
+    description: Billing period start date (aliased as usage_date for consistency with other models).
+    data_type: timestamp
+  - name: billing_period_start_date
+    description: Billing period start date.
+    data_type: timestamp
+  - name: billing_period_end_date
+    description: Billing period end date.
+    data_type: timestamp
+  - name: invoice_id
+    description: AWS invoice identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: billing_entity
+    description: AWS billing entity.
+    data_type: varchar
+  - name: legal_entity
+    description: Legal entity for billing.
+    data_type: varchar
+  - name: bill_type
+    description: Type of bill (Purchase, Anniversary, etc.).
+    data_type: varchar
+  - name: invoicing_entity
+    description: Entity responsible for invoicing.
+    data_type: varchar
+  - name: is_invoice_complete
+    description: Flag indicating if the invoice data is complete.
+    data_type: boolean
+  - name: total_effective_cost
+    description: Total effective cost for the invoice.
+    data_type: decimal
+  - name: total_billed_cost
+    description: Total billed cost for the invoice.
+    data_type: decimal
+  - name: total_contracted_cost
+    description: Total contracted cost for the invoice.
+    data_type: decimal
+  - name: total_list_cost
+    description: Total list cost for the invoice.
+    data_type: decimal
+  - name: total_effective_cost_charge_types
+    description: Total effective cost by charge types.
+    data_type:
+      struct<usage:double,tax:double,fee:double,rifee:double,credit:double,refund:double,discounted_usage:double,savings_plan_covered_usage:double,savings_plan_recurring_fee:double,savings_plan_upfront_fee:double,savings_plan_negation:double,edp_discount:double,bundled_discount:double,other:double>
+  - name: total_billed_cost_charge_types
+    description: Total billed cost by charge types.
+    data_type:
+      struct<usage:double,tax:double,fee:double,rifee:double,credit:double,refund:double,discounted_usage:double,savings_plan_covered_usage:double,savings_plan_recurring_fee:double,savings_plan_upfront_fee:double,savings_plan_negation:double,edp_discount:double,bundled_discount:double,other:double>
+  - name: total_contracted_cost_charge_types
+    description: Total contracted cost by charge types.
+    data_type:
+      struct<usage:double,tax:double,fee:double,rifee:double,credit:double,refund:double,discounted_usage:double,savings_plan_covered_usage:double,savings_plan_recurring_fee:double,savings_plan_upfront_fee:double,savings_plan_negation:double,edp_discount:double,bundled_discount:double,other:double>
+  - name: total_list_cost_charge_types
+    description: Total list cost by charge types.
+    data_type:
+      struct<usage:double,tax:double,fee:double,rifee:double,credit:double,refund:double,discounted_usage:double,savings_plan_covered_usage:double,savings_plan_recurring_fee:double,savings_plan_upfront_fee:double,savings_plan_negation:double,edp_discount:double,bundled_discount:double,other:double>
+  - name: unique_services_approx
+    description: Approximate count of unique services.
+    data_type: bigint
+  - name: unique_regions_approx
+    description: Approximate count of unique regions.
+    data_type: bigint
+  - name: unique_accounts_approx
+    description: Approximate count of unique accounts.
+    data_type: bigint
+  - name: unique_resources_approx
+    description: Approximate count of unique resources.
+    data_type: bigint
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_core__region_monthly
+  description: |
+    Monthly aggregation of AWS costs by region and service for geographic cost distribution analysis.
+    Sources data from silver_aws__cost_daily with region mapping enrichment from seed__aws_regions.
+
+    Key Features:
+    - Human-readable region names mapped from seed__aws_regions lookup table
+    - Service-level breakdown within each region for detailed analysis
+    - Service category classification for high-level grouping
+    - Account-level granularity for multi-account cost attribution
+    - Filters to running usage charges for clean operational cost view
+
+    Use Cases:
+    - Analyze cost distribution across AWS regions for workload placement decisions
+    - Compare regional pricing differences for same services
+    - Identify opportunities for regional consolidation
+    - Track regional compliance costs (data residency requirements)
+    - Plan disaster recovery capacity by understanding regional spend
+
+    Important Notes:
+    - Includes "global" region for services without regional pricing (IAM, Route53, CloudFront)
+    - Region mapping relies on seed__aws_regions for standardized naming
+    - Consider data transfer costs when planning regional migrations
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global) from seed__aws_regions.
+    data_type: varchar
+  - name: region_name
+    description: Human-readable AWS region display name (e.g., 'US East (N. Virginia)', 'EU (Ireland)') from seed__aws_regions.
+    data_type: varchar
+  - name: service_category
+    description: AWS service category.
+    data_type: varchar
+  - name: service_name
+    description: AWS service name.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for the region and month.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar

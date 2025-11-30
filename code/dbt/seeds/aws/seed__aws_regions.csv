@@ -1,0 +1,40 @@
+region_id,region_name,region_country,region_city,region_latitude,region_longitude,region_timezone
+global,Global,Global,Global,0.00,0.00,UTC
+af-south-1,Africa (Cape Town),South Africa,Cape Town,-33.91,18.42,Africa/Johannesburg
+ap-east-1,Asia Pacific (Hong Kong),Hong Kong,Hong Kong,22.28,114.15,Asia/Hong_Kong
+ap-east-2,Asia Pacific (Taiwan),Taiwan,Taipei,25.03,121.56,Asia/Taipei
+ap-northeast-1,Asia Pacific (Tokyo),Japan,Tokyo,35.64,139.76,Asia/Tokyo
+ap-northeast-2,Asia Pacific (Seoul),South Korea,Seoul,37.72,126.04,Asia/Seoul
+ap-northeast-3,Asia Pacific (Osaka),Japan,Osaka,34.69,135.5,Asia/Tokyo
+ap-south-1,Asia Pacific (Mumbai),India,Mumbai,19.08,72.88,Asia/Kolkata
+ap-south-2,Asia Pacific (Hyderabad),India,Hyderabad,17.39,78.49,Asia/Kolkata
+ap-southeast-1,Asia Pacific (Singapore),Singapore,Singapore,1.35,103.86,Asia/Singapore
+ap-southeast-2,Asia Pacific (Sydney),Australia,Sydney,-33.88,151.23,Australia/Sydney
+ap-southeast-3,Asia Pacific (Jakarta),Indonesia,Jakarta,-6.17,106.82,Asia/Jakarta
+ap-southeast-4,Asia Pacific (Melbourne),Australia,Melbourne,-37.81,144.96,Australia/Melbourne
+ap-southeast-5,Asia Pacific (Malaysia),Malaysia,Kuala Lumpur,3.14,101.69,Asia/Kuala_Lumpur
+ap-southeast-7,Asia Pacific (Thailand),Thailand,Bangkok,13.76,100.50,Asia/Bangkok
+ca-central-1,Canada (Central),Canada,Montreal,45.50,-73.57,America/Toronto
+ca-west-1,Canada West (Calgary),Canada,Calgary,51.05,-114.07,America/Edmonton
+cn-north-1,China (Beijing),China,Beijing,39.91,116.41,Asia/Beijing
+cn-northwest-1,China (Ningxia),China,Ningxia,38.47,106.26,Asia/Beijing
+eu-central-1,EU (Frankfurt),Germany,Frankfurt,50.11,8.68,Europe/Berlin
+eu-central-2,EU (Zurich),Switzerland,Zurich,47.37,8.54,Europe/Zurich
+eu-north-1,EU (Stockholm),Sweden,Stockholm,59.33,18.07,Europe/Stockholm
+eu-south-1,EU (Milan),Italy,Milan,45.46,9.18,Europe/Rome
+eu-south-2,EU (Spain),Spain,Madrid,40.41,-3.70,Europe/Madrid
+eu-west-1,EU (Ireland),Ireland,Dublin,53.35,-6.26,Europe/Dublin
+eu-west-2,EU (London),United Kingdom,London,51.51,-0.13,Europe/London
+eu-west-3,EU (Paris),France,Paris,48.85,2.35,Europe/Paris
+il-central-1,Israel (Tel Aviv),Israel,Tel Aviv,32.08,34.78,Asia/Jerusalem
+me-central-1,Middle East (UAE),United Arab Emirates,Dubai,25.27,55.29,Asia/Dubai
+me-south-1,Middle East (Bahrain),Bahrain,Bahrain,26.11,50.50,Asia/Bahrain
+mx-central-1,Mexico (Central),Mexico,Mexico City,19.43,-99.13,America/Mexico_City
+sa-east-1,South America (Sao Paulo),Brazil,Sao Paulo,-23.37,-46.63,America/Sao_Paulo
+us-east-1,US East (N. Virginia),United States,Virginia,38.80,-77.11,America/New_York
+us-east-2,US East (Ohio),United States,Ohio,40.36,-82.91,America/New_York
+us-gov-east-1,AWS GovCloud (US-East),United States,Ohio,40.49,-81.45,America/New_York
+us-gov-west-1,AWS GovCloud (US-West),United States,Oregon,39.53,-119.88,America/Los_Angeles
+us-west-1,US West (N. California),United States,California,36.55,-119.89,America/Los_Angeles
+us-west-2,US West (Oregon),United States,Oregon,43.82,-120.33,America/Los_Angeles
+external,External,Global,External,0.00,0.00,UTC

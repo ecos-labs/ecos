@@ -1,0 +1,33 @@
+version: 2
+
+macros:
+  - name: aws_mappings_unified_usage_category_map
+    description: >
+      Unified master orchestrator for AWS service usage categorization across all supported services.
+      Returns service-specific category names for compute, storage, network, database, and other services.
+      Centralized mapping for consistent categorization across all consumption layers.
+    arguments:
+      - name: service_code_col
+        type: string
+        description: Column reference for AWS service code.
+      - name: operation_col
+        type: string
+        description: Column reference for AWS operation.
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+      - name: charge_type_col
+        type: string
+        description: Column reference for AWS charge type.
+      - name: instance_type_col
+        type: string
+        description: Column reference for AWS instance type.
+      - name: engine_col
+        type: string
+        description: Column reference for AWS database engine.
+      - name: billing_entity_col
+        type: string
+        description: Column reference for AWS billing entity.
+      - name: product_name_col
+        type: string
+        description: Column reference for AWS product name.

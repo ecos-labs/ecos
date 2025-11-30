@@ -1,0 +1,689 @@
+version: 2
+models:
+- name: gold_compute__container_daily
+  description: |
+    Daily aggregation of container compute costs by cluster, providing visibility into ECS/EKS spend and optimization opportunities.
+    Sources data from silver_aws__container_daily with cluster-level aggregation for cost tracking and chargeback.
+
+    Key Features:
+    - Splits costs by compute type: Fargate vs EC2 backing for cost comparison
+    - Breaks down costs by resource dimension: vCPU, Memory, and Other charges
+    - Calculates unit costs (cost per vCPU-hour, cost per GB-hour) for efficiency benchmarking
+    - Tracks savings from commitments with percentage calculation
+    - Projects monthly run rate from daily spend for forecasting
+
+    Use Cases:
+    - Compare Fargate vs EC2 cost efficiency per cluster
+    - Track container costs by cluster for team chargeback
+    - Identify clusters with low commitment coverage
+    - Detect daily cost anomalies in container infrastructure
+    - Calculate effective hourly rates for capacity planning
+
+    Important Notes:
+    - Only includes records with non-null cluster names
+    - Monthly run rate assumes consistent daily spend (may vary)
+    - Savings percentage compares effective cost to list cost
+  columns:
+  - name: usage_date
+    description: Date of the usage (daily grain).
+    data_tests:
+    - not_null
+  - name: account_id
+    description: AWS account ID where the cluster runs.
+    data_tests:
+    - not_null
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: container_platform
+    description: Container platform type (ECS, EKS, Fargate, ECS-EC2, EKS-EC2).
+    data_tests:
+    - not_null
+    - accepted_values:
+        values:
+        - ECS
+        - EKS
+        - Fargate
+        - ECS-EC2
+        - EKS-EC2
+        - Other
+  - name: cluster_name
+    description: Name of the ECS cluster or EKS cluster.
+    data_tests:
+    - not_null
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: fargate_cost
+    description: Total cost for Fargate compute.
+  - name: ec2_cost
+    description: Total cost for EC2 compute.
+  - name: total_vcpu_cost
+    description: Total cost attributed to vCPU usage.
+  - name: total_memory_cost
+    description: Total cost attributed to memory usage.
+  - name: total_other_cost
+    description: Total other costs.
+    data_type: decimal
+  - name: total_vcpu_hours
+    description: Total vCPU hours consumed.
+  - name: total_memory_gb_hours
+    description: Total memory GB hours consumed.
+  - name: total_effective_cost
+    description: Total effective cost for the day.
+    data_type: decimal
+  - name: total_billed_cost
+    description: Total billed cost for the day.
+    data_type: decimal
+  - name: total_list_cost
+    description: Total list cost for the day.
+    data_type: decimal
+  - name: total_savings
+    description: Total savings for the day.
+    data_type: decimal
+  - name: savings_percentage
+    description: Percentage saved compared to on-demand pricing.
+  - name: ecs_service_count
+    description: Number of ECS services.
+    data_type: integer
+  - name: resource_count
+    description: Number of resources.
+    data_type: integer
+  - name: cost_per_vcpu_hour
+    description: Average cost per vCPU hour.
+  - name: cost_per_gb_hour
+    description: Average cost per GB of memory per hour.
+  - name: monthly_run_rate
+    description: Projected monthly cost based on daily spend.
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_compute__instance_resource_monthly
+  description: |
+    Monthly compute resource rollup with usage, cost, and commitment insights for optimization.
+    Provides detailed instance-level analysis including purchase options, utilization patterns, and optimization opportunities.
+  columns:
+  - name: usage_date
+    description: Month of the usage (truncated to first day of month).
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code (e.g., AmazonEC2, AmazonRDS).
+    data_type: varchar
+  - name: service_name
+    description: Human-readable service name (e.g., EC2, RDS, ElastiCache).
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: resource_id
+    description: Unique resource identifier.
+    data_type: varchar
+  - name: instance_type
+    description: Full instance type (e.g., m5.large, db.t3.micro).
+    data_type: varchar
+  - name: instance_type_family
+    description: Instance type family (e.g., m5, t3, r5 for EC2).
+    data_type: varchar
+  - name: instance_type_details
+    description: Detailed instance type specifications.
+    data_type: struct<size:string,vcpu:string,vcpu_normalized:double,memory:string,gpu_memory:string>
+  - name: engine
+    description: Database or cache engine (for RDS, ElastiCache instances).
+    data_type: varchar
+  - name: operating_system
+    description: Operating system type (Windows, Linux, etc.).
+    data_type: varchar
+  - name: tenancy
+    description: Instance tenancy (Shared, Dedicated, or Host).
+    data_type: varchar
+  - name: license_model
+    description: Software license model (BYOL, License Included, etc.).
+    data_type: varchar
+  - name: processor_type
+    description: Specific processor type identifier.
+    data_type: varchar
+  - name: processor_family
+    description: Processor family classification (Intel, AMD, Graviton, Other).
+    data_type: varchar
+  - name: processor_generation
+    description: Processor generation classification (Current, Previous, Old).
+    data_type: varchar
+  - name: latest_intel
+    description: Latest generation Intel processor available for this instance family.
+    data_type: varchar
+  - name: latest_amd
+    description: Latest generation AMD processor available for this instance family.
+    data_type: varchar
+  - name: latest_graviton
+    description: Latest generation Graviton processor available as alternative.
+    data_type: varchar
+  - name: purchase_option_selection
+    description: Recommended purchase option (On-Demand, Reserved, Spot, SavingsPlan).
+    data_type: varchar
+  - name: total_billed_cost
+    description: Total billed cost that appears on the bill.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for the month.
+    data_type: decimal
+  - name: total_list_cost
+    description: Total list cost for the month at on-demand rates.
+    data_type: decimal
+  - name: total_effective_cost_purchase
+    description: Total effective cost for purchased instances (on-demand and reserved).
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: total_list_cost_purchase
+    description: Total list cost for purchased instances.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: pct_usage_ondemand
+    description: Percentage of usage on on-demand instances.
+    data_type: decimal
+  - name: pct_usage_commitment
+    description: Percentage of usage covered by commitments (RI/SP).
+    data_type: decimal
+  - name: pct_usage_spot
+    description: Percentage of usage on Spot instances.
+    data_type: decimal
+  - name: pct_discount_blended
+    description: Overall percentage discount across all purchase options.
+    data_type: decimal
+  - name: pct_discount_purchase
+    description: Percentage discount by purchase option.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: hourly_rate_blended
+    description: Blended hourly rate across all purchase options.
+    data_type: decimal
+  - name: hourly_rate_purchase
+    description: Hourly rate breakdown by purchase option.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: total_usage_hours
+    description: Total usage hours for the month.
+    data_type: double
+  - name: total_usage_hours_purchase
+    description: Total usage hours breakdown by purchase option.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: total_usage_amount
+    description: Total usage hours for the month.
+    data_type: decimal
+  - name: total_normalized_usage_amount
+    description: Total normalized usage amount for rightsizing analysis.
+    data_type: decimal
+  - name: total_usage_amount_purchase
+    description: Total usage hours for purchased instances.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: total_hours_month
+    description: Total number of hours in the month.
+    data_type: decimal
+  - name: pct_utilization
+    description: Percentage of reserved capacity utilized.
+    data_type: decimal
+  - name: savings_mon_to_fri_full_day
+    description: Potential savings if instance runs Monday-Friday full day schedule.
+    data_type: decimal
+  - name: savings_mon_to_fri_work_hours
+    description: Potential savings if instance runs Monday-Friday business hours only.
+    data_type: decimal
+  - name: savings_target_50_pct
+    description: Potential savings from 50% utilization improvement.
+    data_type: decimal
+  - name: has_commitments_opportunity
+    description: Boolean flag indicating opportunity to purchase commitments (RI/SP).
+    data_type: boolean
+  - name: has_graviton_opportunity
+    description: Boolean flag indicating potential cost savings from Graviton migration.
+    data_type: boolean
+  - name: has_modernization_opportunity
+    description: Boolean flag indicating modernization opportunity (e.g., migrate to newer instance generation).
+    data_type: boolean
+  - name: billing_period
+    description: Billing period identifier for the invoice cycle.
+    data_type: varchar
+
+- name: gold_compute__instance_type_account_monthly
+  description: |
+    Monthly aggregation of instance types by account, enabling capacity planning and processor migration analysis.
+    Sources data from gold_compute__instance_resource_monthly with account-level rollups using instance_type_aggregation macro.
+
+    Key Features:
+    - Account-level instance type summary with resource and account counts
+    - Processor family tracking (Intel, AMD, Graviton) with generation details
+    - Latest processor alternatives shown for each instance type (latest_intel, latest_amd, latest_graviton)
+    - Utilization percentiles (p5, median, p95) for rightsizing analysis
+    - Purchase option breakdown with hourly rates and discounts
+
+    Use Cases:
+    - Plan processor migration initiatives per account (Intel to Graviton)
+    - Identify accounts with high on-demand usage for commitment purchases
+    - Compare utilization patterns across accounts
+    - Analyze scheduling savings potential (Mon-Fri vs 24/7 workloads)
+    - Track instance modernization progress by account
+
+    Important Notes:
+    - Built on top of gold_compute__instance_resource_monthly
+    - Utilization percentiles help identify over/under-provisioned accounts
+    - Use pct_usage_ondemand to prioritize commitment purchase opportunities
+  columns:
+  - name: usage_date
+    description: Month of the usage (truncated to first day of month).
+    data_type: timestamp
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: service_code
+    description: AWS service code.
+    data_type: varchar
+  - name: service_name
+    description: AWS service name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: instance_type
+    description: Instance type.
+    data_type: varchar
+  - name: instance_type_family
+    description: Instance type family.
+    data_type: varchar
+  - name: processor_family
+    description: Processor family (Intel, AMD, Graviton).
+    data_type: varchar
+  - name: processor_generation
+    description: Processor generation identifier.
+    data_type: varchar
+  - name: latest_intel
+    description: Latest Intel generation available.
+    data_type: varchar
+  - name: latest_amd
+    description: Latest AMD generation available.
+    data_type: varchar
+  - name: latest_graviton
+    description: Latest Graviton generation available.
+    data_type: varchar
+  - name: count_accounts
+    description: Number of accounts using this instance type.
+    data_type: integer
+  - name: count_resources
+    description: Number of resources of this instance type.
+    data_type: integer
+  - name: total_billed_cost
+    description: Total billed cost for the month.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for the month.
+    data_type: decimal
+  - name: total_list_cost
+    description: Total list cost for the month.
+    data_type: decimal
+  - name: total_usage_hours
+    description: Total usage hours.
+    data_type: decimal
+  - name: total_usage_amount
+    description: Total usage hours for the month.
+    data_type: decimal
+  - name: total_normalized_usage_amount
+    description: Total normalized usage amount.
+    data_type: decimal
+  - name: total_hours_month
+    description: Total number of hours in the month.
+    data_type: decimal
+  - name: pct_utilization_avg
+    description: Average utilization percentage.
+    data_type: decimal
+  - name: pct_utilization_p5
+    description: 5th percentile utilization percentage.
+    data_type: decimal
+  - name: pct_utilization_median
+    description: Median utilization percentage.
+    data_type: decimal
+  - name: pct_utilization_p95
+    description: 95th percentile utilization percentage.
+    data_type: decimal
+  - name: total_savings_mon_to_fri_full_day
+    description: Potential savings with Monday-Friday full day schedule.
+    data_type: decimal
+  - name: total_savings_mon_to_fri_work_hours
+    description: Potential savings with Monday-Friday business hours.
+    data_type: decimal
+  - name: total_savings_target_50_pct
+    description: Potential savings from 50% utilization improvement.
+    data_type: decimal
+  - name: pct_usage_ondemand
+    description: Percentage of usage on on-demand instances.
+    data_type: decimal
+  - name: pct_usage_commitment
+    description: Percentage of usage covered by commitments.
+    data_type: decimal
+  - name: pct_usage_spot
+    description: Percentage of usage on Spot instances.
+    data_type: decimal
+  - name: hourly_rate_blended
+    description: Blended hourly rate across purchase options.
+    data_type: decimal
+  - name: pct_discount_blended
+    description: Overall percentage discount across purchase options.
+    data_type: decimal
+  - name: hourly_rate_purchase
+    description: Hourly rate for purchased instances.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: pct_discount_purchase
+    description: Percentage discount on purchased instances.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_compute__instance_type_monthly
+  description: |
+    Monthly aggregation of instance types across all accounts and services.
+    Provides comprehensive instance type usage analysis with normalization factors and optimization insights for rightsizing initiatives.
+  columns:
+  - name: usage_date
+    description: Month of the usage (truncated to first day of month).
+    data_type: timestamp
+  - name: service_code
+    description: AWS service code (e.g., AmazonEC2, AmazonRDS).
+    data_type: varchar
+  - name: service_name
+    description: AWS service name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: instance_type
+    description: Instance type (e.g., m5.large, db.t3.micro).
+    data_type: varchar
+  - name: instance_type_family
+    description: Instance type family.
+    data_type: varchar
+  - name: processor_family
+    description: Processor family (Intel, AMD, Graviton).
+    data_type: varchar
+  - name: processor_generation
+    description: Processor generation identifier.
+    data_type: varchar
+  - name: latest_intel
+    description: Latest Intel generation available.
+    data_type: varchar
+  - name: latest_amd
+    description: Latest AMD generation available.
+    data_type: varchar
+  - name: latest_graviton
+    description: Latest Graviton generation available.
+    data_type: varchar
+  - name: count_accounts
+    description: Number of accounts using this instance type.
+    data_type: integer
+  - name: count_resources
+    description: Number of resources of this instance type.
+    data_type: integer
+  - name: total_billed_cost
+    description: Total billed cost that appears on the bill.
+    data_type: decimal
+  - name: total_effective_cost
+    description: Total effective cost for the month.
+    data_type: decimal
+  - name: total_list_cost
+    description: Total list cost for the month.
+    data_type: decimal
+  - name: total_usage_hours
+    description: Total usage hours.
+    data_type: decimal
+  - name: total_usage_amount
+    description: Total usage hours for the month.
+    data_type: decimal
+  - name: total_normalized_usage_amount
+    description: Total normalized usage amount.
+    data_type: decimal
+  - name: total_hours_month
+    description: Total number of hours in the month.
+    data_type: decimal
+  - name: pct_utilization_avg
+    description: Average utilization percentage.
+    data_type: decimal
+  - name: pct_utilization_p5
+    description: 5th percentile utilization percentage.
+    data_type: decimal
+  - name: pct_utilization_median
+    description: Median utilization percentage.
+    data_type: decimal
+  - name: pct_utilization_p95
+    description: 95th percentile utilization percentage.
+    data_type: decimal
+  - name: total_savings_mon_to_fri_full_day
+    description: Potential savings with Monday-Friday full day schedule.
+    data_type: decimal
+  - name: total_savings_mon_to_fri_work_hours
+    description: Potential savings with Monday-Friday business hours.
+    data_type: decimal
+  - name: total_savings_target_50_pct
+    description: Potential savings from 50% utilization improvement.
+    data_type: decimal
+  - name: pct_usage_ondemand
+    description: Percentage of usage on on-demand instances.
+    data_type: decimal
+  - name: pct_usage_commitment
+    description: Percentage of usage covered by commitments.
+    data_type: decimal
+  - name: pct_usage_spot
+    description: Percentage of usage on Spot instances.
+    data_type: decimal
+  - name: hourly_rate_blended
+    description: Blended hourly rate across purchase options.
+    data_type: decimal
+  - name: pct_discount_blended
+    description: Overall percentage discount across purchase options.
+    data_type: decimal
+  - name: hourly_rate_purchase
+    description: Hourly rate for purchased instances.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: pct_discount_purchase
+    description: Percentage discount on purchased instances.
+    data_type:
+      struct<ondemand:double,savings_plan_1y:double,savings_plan_3y:double,reserved_1y:double,reserved_3y:double,spot:double>
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_compute__lambda_summary_monthly
+  description: |
+    Monthly analysis of AWS Lambda serverless computing usage and costs with Savings Plan coverage tracking.
+    Provides detailed breakdown by usage category including compute duration (GB-Seconds), requests, Lambda@Edge, and data transfer.
+    Includes amortized costs accounting for Savings Plan effective costs and unused commitments.
+
+    Key Features:
+    - Usage category breakdown: GB-Seconds, Requests, Lambda Edge, Data Transfer (IN/OUT/Regional)
+    - Savings Plan coverage tracking with effective cost calculation
+    - Amortized cost includes: SP effective cost, unused SP commitment, RI costs, standard usage
+    - Processor architecture identification (x86, Graviton2)
+    - Function-level granularity with resource ID tracking
+    - Regional cost allocation
+
+    Usage Categories:
+    - Lambda GB x Sec.: Compute duration (memory * execution time)
+    - Lambda Requests: Function invocation count
+    - Lambda EDGE GB x Sec.: Lambda@Edge compute duration
+    - Lambda EDGE Requests: Lambda@Edge invocations
+    - Data Transfer: IN/OUT/Regional data movement
+
+    Cost Components:
+    - SavingsPlanCoveredUsage: Covered by Savings Plan (uses SP effective cost)
+    - SavingsPlanRecurringFee: Unused SP commitment allocated
+    - DiscountedUsage: RI covered usage (uses reservation effective cost)
+    - Usage: Standard on-demand usage
+
+    Use Cases:
+    - Function-level cost optimization
+    - Savings Plan coverage analysis
+    - Graviton migration opportunity identification
+    - Regional usage pattern analysis
+  columns:
+  - name: usage_date
+    description: Month of the usage (truncated to first day of month).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: usage_category
+    description: Lambda usage category (Requests, Duration, etc.).
+    data_type: varchar
+  - name: function_name
+    description: Lambda function name.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: processor_architecture
+    description: Processor architecture type.
+    data_type: varchar
+  - name: total_effective_cost
+    description: Total effective cost for the month.
+    data_type: decimal
+  - name: total_usage_amount
+    description: Total usage amount for the month.
+    data_type: decimal
+  - name: total_effective_cost_savings_plan
+    description: Total effective cost with savings plan.
+    data_type: decimal
+  - name: total_effective_cost_ondemand
+    description: Total effective cost on on-demand pricing.
+    data_type: decimal
+  - name: potential_graviton_savings
+    description: Potential savings from Graviton migration.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: varchar
+- name: gold_compute__unused_reservation_monthly
+  description: |
+    Monthly report of EC2 reserved capacity that remained unused with remediation signals.
+  columns:
+  - name: usage_date
+    description: Month of the usage (truncated to first day of month).
+    data_type: timestamp
+  - name: owner_account
+    description: Account that owns the reservation.
+    data_type: varchar
+  - name: consumer_account
+    description: Account consuming the reservation.
+    data_type: varchar
+  - name: item_description
+    description: Description of the reserved instance.
+    data_type: varchar
+  - name: resource_id
+    description: Reserved Instance resource identifier.
+    data_type: varchar
+  - name: total_reservation_amount
+    description: Total reservation amount.
+    data_type: decimal
+  - name: unused_reservation_amount
+    description: Amount of unused reservation.
+    data_type: decimal
+  - name: total_unused_reservation_cost
+    description: Total cost of unused reservation capacity.
+    data_type: decimal
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: timestamp
+- name: gold_compute__workspace_optimization_monthly
+  description: |
+    Monthly analysis of Amazon WorkSpaces AutoStop mode usage identifying optimization opportunities to switch to AlwaysOn mode.
+    AutoStop Workspaces are cost-effective when used for several hours per day. If AutoStop Workspaces run for more than 80 hours per month,
+    it is more cost-effective to switch to AlwaysOn mode.
+
+    Business Logic:
+    - Threshold: 80 hours per month usage
+    - Rationale: AutoStop billing = Monthly fee + (Hours * Hourly rate)
+    - AlwaysOn billing = Fixed monthly fee (typically lower if usage > 80 hrs)
+    - Example: Windows PowerPro (8 vCPU, 32GB) in eu-west-1 at 400 hrs/month:
+      * AutoStop: $612/month ($8 monthly + 400 * $1.53/hour)
+      * AlwaysOn: $141/month (fixed)
+      * Savings: $471/month (77% reduction)
+
+    Key Features:
+    - Filters for AutoStop WorkSpaces with usage > 80 hours
+    - Includes monthly fee in total cost calculation
+    - Groups by workspace resource, region, bundle, OS
+    - Ordered by total cost DESC to prioritize high-impact optimizations
+    - Previous month analysis for stable usage pattern identification
+
+    Filters Applied:
+    - Product: AmazonWorkSpaces
+    - Line item type: Usage
+    - Usage type: Contains 'AutoStop'
+    - Time period: Previous month only
+    - Usage threshold: > 80 hours per resource per pricing unit
+
+    Use Cases:
+    - Identify high-usage AutoStop workspaces for AlwaysOn conversion
+    - Calculate monthly savings potential from mode switching
+    - Prioritize workspace optimization by current monthly cost
+    - Monitor workspace usage patterns for billing optimization
+
+    Recommended Action:
+    - Consider AWS WorkSpaces Cost Optimizer solution for automated optimization
+    - Validate usage patterns are consistent month-over-month before switching
+  columns:
+  - name: usage_date
+    description: Month of usage (truncated to first day of month).
+    data_type: timestamp
+  - name: payer_account_id
+    description: AWS payer account identifier.
+    data_type: varchar
+  - name: account_id
+    description: AWS linked account identifier.
+    data_type: varchar
+  - name: workspace_id
+    description: WorkSpace identifier.
+    data_type: varchar
+  - name: region_id
+    description: Standardized AWS region identifier code (e.g., us-east-1, eu-west-1, global).
+    data_type: varchar
+  - name: operating_system
+    description: Operating system.
+    data_type: varchar
+  - name: bundle_description
+    description: WorkSpace bundle description.
+    data_type: varchar
+  - name: software_included
+    description: Software included in the bundle.
+    data_type: varchar
+  - name: license_model
+    description: License model.
+    data_type: varchar
+  - name: rootvolume
+    description: Root volume configuration.
+    data_type: varchar
+  - name: uservolume
+    description: User volume configuration.
+    data_type: varchar
+  - name: pricing_unit
+    description: Pricing unit.
+    data_type: varchar
+  - name: total_usage_amount
+    description: Total usage amount.
+    data_type: decimal
+  - name: total_billed_cost_incl_monthly_fee
+    description: Total billed cost including monthly fee.
+    data_type: decimal(16,8)
+  - name: billing_period
+    description: Billing period identifier.
+    data_type: timestamp

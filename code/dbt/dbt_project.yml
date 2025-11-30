@@ -1,0 +1,95 @@
+# ===================================================================
+# DBT CONFIGURATION
+# ===================================================================
+
+name: "ecos"
+version: "1.0.0"
+require-dbt-version: ">=1.9.0"
+
+profile: "athena"
+
+model-paths: ["models"]
+analysis-paths: ["analysis"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+flags:
+  debug: false
+  fail_fast: true
+  send_anonymous_usage_stats: false
+
+
+# ===================================================================
+# ECOS CONFIGURATION
+# ===================================================================
+
+vars:
+
+  # ===================================================================
+  # DATA SOURCES
+  # ===================================================================
+
+  # Data source configuration
+  # AWS CUR (Cost and Usage Reports)
+  # These will be populated by ecos init or can be overridden via --vars
+  cur_database: "PLACEHOLDER_CUR_DATABASE"
+  cur_schema: "PLACEHOLDER_CUR_SCHEMA"
+  cur_table: "PLACEHOLDER_CUR_TABLE"
+
+
+  # ===================================================================
+  # MATERIALIZATION
+  # ===================================================================
+
+  # Materialization mode:
+  # - 'view': All models as views (fast deployment but queries might be slower because of query-time computation)
+  # - 'smart': Optimized per model for best query performance (e.g., bronze models as views, gold as incremental tables)
+  materialization_mode: "view"
+
+  # Billing period: Auto-calculated via lookback, or explicitly set with start/end dates
+  billing_lookback_months: 6  # Auto-load last N months of data from current month
+  billing_period_start: null  # Overrides lookback with explicit YYYY-MM (null = auto-calculate)
+  billing_period_end: null    # Override lookback with explicit YYYY-MM (null = current month)
+
+  # Override materialization per model (view | table | incremental)
+  # Example:
+  #  materialization_overrides:
+  #    silver_aws__cost_daily: view
+  materialization_overrides: {}
+
+  # Iceberg table format:
+  # - true: Use Iceberg table format (EXPERIMENTAL)
+  # - false: Use Parquet/Hive table format (stable)
+  iceberg_enabled: false
+
+
+# ===================================================================
+# DBT MODELS, SEEDS and TESTS CONFIGURATION
+# ===================================================================
+
+# Model-specific settings are intentionally left empty here.
+# All materialization configuration is managed via the get_model_config() macro
+models:
+  ecos:
+    1_bronze: {}
+    2_silver: {}
+    3_gold: {}
+    4_serve: {}
+
+seeds:
+  ecos:
+    +enabled: true
+    +full_refresh: true
+
+tests:
+  +severity: error
+  +store_failures: true
+  +database: awsdatacatalog
+  +schema: audit

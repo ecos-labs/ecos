@@ -1,0 +1,29 @@
+version: 2
+
+macros:
+  - name: aws_mappings_sqs_category
+    description: >
+      Categorizes Amazon SQS (Simple Queue Service) usage types for messaging cost tracking.
+      Maps standard and FIFO queue requests, data transfer patterns to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_sns_category
+    description: >
+      Categorizes Amazon SNS (Simple Notification Service) usage types for messaging cost tracking.
+      Maps API requests, delivery attempts, FIFO features, and data transfer to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.
+
+  - name: aws_mappings_mq_category
+    description: >
+      Categorizes Amazon MQ usage types for message broker cost tracking.
+      Maps ActiveMQ and RabbitMQ broker instances and storage to categories.
+    arguments:
+      - name: usage_type_col
+        type: string
+        description: Column reference for AWS usage type.

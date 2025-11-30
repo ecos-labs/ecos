@@ -1,0 +1,52 @@
+version: 2
+
+macros:
+  - name: instance_type_rates_cte
+    description: >
+      Generates rates CTE for instance models with hourly rate calculations.
+      Calculates blended rates and structured rates for different pricing models
+      (on-demand, savings plans, reserved instances, spot instances).
+    arguments: []
+
+  - name: instance_type_aggregation
+    description: >
+      Generates instance summary aggregation SQL with optional account-level granularity.
+      Aggregates compute instance data by time, instance type, and other dimensions with
+      comprehensive cost, usage, utilization, and savings metrics across purchase options.
+    arguments:
+      - name: include_account_fields
+        type: boolean
+        description: Whether to include account_id and payer_account_id in grouping (default false).
+
+  - name: instance_type_final_select
+    description: >
+      Generates final select for instance summary models with optional account fields.
+      Applies rounding to numeric fields and structures the final output with rates
+      and discount calculations from the rates CTE.
+    arguments:
+      - name: include_account_fields
+        type: boolean
+        description: Whether to include account_id and payer_account_id in output (default false).
+
+  - name: cost_period_aggregation
+    description: >
+      Generates period-over-period cost analysis for services with trend calculations, ranking, and normalization.
+      Supports both weekly and monthly aggregations with consistent logic for lag calculations, percentage changes,
+      and top mover identification. Handles partial period normalization for accurate comparisons using date bounds
+      to exclude incomplete recent data.
+    arguments:
+      - name: source_model
+        type: string
+        description: Source dbt model or table name containing daily service cost data.
+      - name: period
+        type: string
+        description: Aggregation period ('week' or 'month').
+      - name: group_by_columns
+        type: list
+        description: List of columns to group by (e.g., account_id, service_code).
+      - name: cost_metric
+        type: string
+        description: Cost column to aggregate (default 'total_effective_cost').
+      - name: include_date_bounds
+        type: boolean
+        description: Whether to include date bounds logic for partial periods (default false).
