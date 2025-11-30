@@ -46,4 +46,4 @@ jobs:
           args: release --clean
           workdir: code/cli
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.CLI_RELEASE_GITHUB_TOKEN }}

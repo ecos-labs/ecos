@@ -10,16 +10,16 @@ before:
 builds:
   - id: ecos-cli
     main: ./main.go
-    binary: ecos-{{ .Os}}-{{ .Arch}}
+    binary: ecos
     env:
       - CGO_ENABLED=0
     flags:
       - -v
     ldflags:
       - -s -w
-      - -X github.com/ecos-labs/ecos-core/code/cli/version.Version={{ .Version }}
-      - -X github.com/ecos-labs/ecos-core/code/cli/version.Commit={{ .FullCommit }}
-      - -X github.com/ecos-labs/ecos-core/code/cli/version.Date={{ .Date }}
+      - -X github.com/ecos-labs/ecos/code/cli/version.Version={{ .Version }}
+      - -X github.com/ecos-labs/ecos/code/cli/version.Commit={{ .FullCommit }}
+      - -X github.com/ecos-labs/ecos/code/cli/version.Date={{ .Date }}
       - -extldflags="-static"
     goos:
       - linux

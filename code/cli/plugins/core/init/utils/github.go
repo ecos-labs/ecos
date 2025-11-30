@@ -22,7 +22,7 @@ import (
 // TODO: Adjust these if repo or owner changes.
 const (
 	DefaultRepoOwner = "ecos-labs"
-	DefaultRepoName  = "ecos-core"
+	DefaultRepoName  = "ecos"
 )
 
 // GitHubClient provides GitHub API operations
@@ -41,15 +41,11 @@ type GitHubRelease struct {
 	} `json:"assets"`
 }
 
-// NewGitHubClient creates a GitHub client using GITHUB_TOKEN for authentication.
-// TODO: Currently token is required because repos are private.
-// Once repos are public, this can be updated to allow unauthenticated access
-// with appropriate rate limiting and fallback logic.
+// NewGitHubClient creates a GitHub client. GITHUB_TOKEN is optional for public repositories.
+// If provided, it will be used for authentication which increases rate limits.
+// For public repositories, unauthenticated access works but with lower rate limits.
 func NewGitHubClient() (*GitHubClient, error) {
 	token := os.Getenv("GITHUB_TOKEN")
-	if token == "" {
-		return nil, errors.New("GITHUB_TOKEN environment variable is required for private repository access")
-	}
 
 	return &GitHubClient{
 		client: &http.Client{
@@ -134,7 +130,9 @@ func (gc *GitHubClient) getAllReleases(ctx context.Context, repoOwner, repoName 
 		return nil, fmt.Errorf("failed to create API request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "token "+gc.token)
+	if gc.token != "" {
+		req.Header.Set("Authorization", "token "+gc.token)
+	}
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
 	resp, err := gc.client.Do(req)
@@ -145,6 +143,15 @@ func (gc *GitHubClient) getAllReleases(ctx context.Context, repoOwner, repoName 
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		// Check for rate limit errors
+		if resp.StatusCode == http.StatusForbidden {
+			if isRateLimitError(resp) {
+				if gc.token == "" {
+					return nil, errors.New("GitHub API rate limit exceeded (60 requests/hour for unauthenticated requests). Set GITHUB_TOKEN environment variable to increase limit to 5000 requests/hour")
+				}
+				return nil, errors.New("GitHub API rate limit exceeded")
+			}
+		}
 		return nil, fmt.Errorf("failed to get releases (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
@@ -165,7 +172,9 @@ func (gc *GitHubClient) getRelease(ctx context.Context, repoOwner, repoName, rel
 		return nil, fmt.Errorf("failed to create API request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "token "+gc.token)
+	if gc.token != "" {
+		req.Header.Set("Authorization", "token "+gc.token)
+	}
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
 	resp, err := gc.client.Do(req)
@@ -178,9 +187,21 @@ func (gc *GitHubClient) getRelease(ctx context.Context, repoOwner, repoName, rel
 	case http.StatusNotFound:
 		return nil, fmt.Errorf("release not found: tag '%s' does not exist in repository %s/%s", releaseTag, repoOwner, repoName)
 	case http.StatusUnauthorized:
-		return nil, errors.New("authentication failed - check GITHUB_TOKEN validity")
+		if gc.token != "" {
+			return nil, errors.New("authentication failed - check GITHUB_TOKEN validity")
+		}
+		return nil, errors.New("authentication required - repository may be private or rate limit exceeded")
 	case http.StatusForbidden:
-		return nil, fmt.Errorf("access forbidden - check GITHUB_TOKEN permissions for repository %s/%s", repoOwner, repoName)
+		if isRateLimitError(resp) {
+			if gc.token == "" {
+				return nil, errors.New("GitHub API rate limit exceeded (60 requests/hour for unauthenticated requests). Set GITHUB_TOKEN environment variable to increase limit to 5000 requests/hour")
+			}
+			return nil, errors.New("GitHub API rate limit exceeded")
+		}
+		if gc.token != "" {
+			return nil, fmt.Errorf("access forbidden - check GITHUB_TOKEN permissions for repository %s/%s", repoOwner, repoName)
+		}
+		return nil, fmt.Errorf("access forbidden - repository %s/%s may be private", repoOwner, repoName)
 	case http.StatusOK:
 		// continue
 	default:
@@ -203,7 +224,9 @@ func (gc *GitHubClient) downloadAsset(ctx context.Context, assetURL string) ([]b
 		return nil, fmt.Errorf("failed to create asset download request: %w", err)
 	}
 
-	req.Header.Set("Authorization", "token "+gc.token)
+	if gc.token != "" {
+		req.Header.Set("Authorization", "token "+gc.token)
+	}
 	req.Header.Set("Accept", "application/octet-stream")
 
 	resp, err := gc.client.Do(req)
@@ -214,6 +237,15 @@ func (gc *GitHubClient) downloadAsset(ctx context.Context, assetURL string) ([]b
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		// Check for rate limit errors
+		if resp.StatusCode == http.StatusForbidden {
+			if isRateLimitError(resp) {
+				if gc.token == "" {
+					return nil, errors.New("GitHub API rate limit exceeded (60 requests/hour for unauthenticated requests). Set GITHUB_TOKEN environment variable to increase limit to 5000 requests/hour")
+				}
+				return nil, errors.New("GitHub API rate limit exceeded")
+			}
+		}
 		return nil, fmt.Errorf("failed to download asset (HTTP %d): %s", resp.StatusCode, string(body))
 	}
 
@@ -335,6 +367,13 @@ func normalizeVersion(version string) string {
 		return "v" + version
 	}
 	return version
+}
+
+// isRateLimitError checks if the HTTP response indicates a rate limit error
+// GitHub returns rate limit errors with X-RateLimit-Remaining header set to 0
+func isRateLimitError(resp *http.Response) bool {
+	remaining := resp.Header.Get("X-RateLimit-Remaining")
+	return remaining == "0"
 }
 
 // extractTarFile extracts a single file from the tar archive reader
