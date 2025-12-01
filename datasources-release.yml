@@ -18,11 +18,12 @@ datasources:
     name: "AWS Cost and Usage Reports"
     package_name: "aws-cur"
     version: "0.1.0"
-    description: "DBT models for AWS Cost and Usage Reports across bronze, silver, and gold layers"
+    description: "DBT models for AWS Cost and Usage Reports across bronze, silver, gold, and serve layers"
     model_paths:
       - "models/1_bronze/aws/cur"
       - "models/2_silver/aws/cur"
       - "models/3_gold/aws/cur"
+      - "models/4_serve/aws/cur"
 
   aws_focus:
     name: "AWS FOCUS Format"
