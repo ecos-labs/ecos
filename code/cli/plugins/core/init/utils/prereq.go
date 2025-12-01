@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 )
 
 // PrereqResult represents the result of prerequisite checking

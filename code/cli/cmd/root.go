@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ecos-labs/ecos-core/code/cli/config"
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
-	"github.com/ecos-labs/ecos-core/code/cli/version"
+	"github.com/ecos-labs/ecos/code/cli/config"
+	"github.com/ecos-labs/ecos/code/cli/utils"
+	"github.com/ecos-labs/ecos/code/cli/version"
 	"github.com/spf13/cobra"
 )
 

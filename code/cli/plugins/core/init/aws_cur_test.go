@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
 )
 
 func TestAWSCURInitPlugin_Metadata(t *testing.T) {

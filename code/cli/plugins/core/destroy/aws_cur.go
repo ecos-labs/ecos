@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	cliConfig "github.com/ecos-labs/ecos-core/code/cli/config"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/registry"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	cliConfig "github.com/ecos-labs/ecos/code/cli/config"
+	"github.com/ecos-labs/ecos/code/cli/plugins/registry"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"

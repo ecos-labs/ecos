@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/registry"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	"github.com/ecos-labs/ecos/code/cli/plugins/registry"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 	"github.com/spf13/cobra"
 
 	// Import init plugins to trigger plugin self-registration
-	_ "github.com/ecos-labs/ecos-core/code/cli/plugins/core/init"
+	_ "github.com/ecos-labs/ecos/code/cli/plugins/core/init"
 )
 
 // initCmd represents the init command

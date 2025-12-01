@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ecos-labs/ecos-core/code/cli/config"
+	"github.com/ecos-labs/ecos/code/cli/config"
 )
 
 // PluginType represents the type of plugin

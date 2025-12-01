@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ecos-labs/ecos-core/code/cli/config"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/core/transform"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	"github.com/ecos-labs/ecos/code/cli/config"
+	"github.com/ecos-labs/ecos/code/cli/plugins/core/transform"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 	"github.com/spf13/cobra"
 )
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 )
 
 // SetupDirectories creates the standard ecos directory structure

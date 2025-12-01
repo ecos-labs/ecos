@@ -15,11 +15,11 @@ import (
 	athenaTypes "github.com/aws/aws-sdk-go-v2/service/athena/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/ecos-labs/ecos-core/code/cli/config"
-	initUtils "github.com/ecos-labs/ecos-core/code/cli/plugins/core/init/utils"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/registry"
-	initTypes "github.com/ecos-labs/ecos-core/code/cli/plugins/types"
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	"github.com/ecos-labs/ecos/code/cli/config"
+	initUtils "github.com/ecos-labs/ecos/code/cli/plugins/core/init/utils"
+	"github.com/ecos-labs/ecos/code/cli/plugins/registry"
+	initTypes "github.com/ecos-labs/ecos/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 )
 
 const (
@@ -47,24 +47,24 @@ type AWSCURInitPlugin struct {
 
 // AWSCURInput represents the user input for AWS CUR initialization
 type AWSCURInput struct {
-	ProjectName       string `mapstructure:"project_name"`
-	TransformTool     string `mapstructure:"transform_tool"`
-	SQLEngine         string `mapstructure:"sql_engine"`
-	DataSourceCatalog string `mapstructure:"data_source_catalog"`
-	CURDatabase       string `mapstructure:"cur_database"`
-	CURTable          string `mapstructure:"cur_table"`
-	AWSRegion         string `mapstructure:"aws_region"`
-	AWSProfile        string `mapstructure:"aws_profile"`
-	CreateResources   bool   `mapstructure:"create_resources"`
-	SkipProvisioning  bool   `mapstructure:"skip_provisioning"`
-	DBTWorkgroup      string `mapstructure:"dbt_workgroup"`
-	AdhocWorkgroup    string `mapstructure:"adhoc_workgroup"`
-	ResultsBucket     string `mapstructure:"results_bucket"`
-	S3StagingDir      string `mapstructure:"s3_staging_dir"`
-	AccountID         string `mapstructure:"account_id"`
-	DetectedRegion    string `mapstructure:"detected_region"`
-	ModelVersion      string `mapstructure:"model_version"`
-	DryRun            bool   `mapstructure:"dry_run"`
+	ProjectName      string `mapstructure:"project_name"`
+	TransformTool    string `mapstructure:"transform_tool"`
+	SQLEngine        string `mapstructure:"sql_engine"`
+	CURDatabase      string `mapstructure:"cur_database"`
+	CURSchema        string `mapstructure:"cur_schema"`
+	CURTable         string `mapstructure:"cur_table"`
+	AWSRegion        string `mapstructure:"aws_region"`
+	AWSProfile       string `mapstructure:"aws_profile"`
+	CreateResources  bool   `mapstructure:"create_resources"`
+	SkipProvisioning bool   `mapstructure:"skip_provisioning"`
+	DBTWorkgroup     string `mapstructure:"dbt_workgroup"`
+	AdhocWorkgroup   string `mapstructure:"adhoc_workgroup"`
+	ResultsBucket    string `mapstructure:"results_bucket"`
+	S3StagingDir     string `mapstructure:"s3_staging_dir"`
+	AccountID        string `mapstructure:"account_id"`
+	DetectedRegion   string `mapstructure:"detected_region"`
+	ModelVersion     string `mapstructure:"model_version"`
+	DryRun           bool   `mapstructure:"dry_run"`
 }
 
 // MaterializationConfig represents materialization settings
@@ -197,19 +197,19 @@ func (p *AWSCURInitPlugin) RunInteractiveSetup() error {
 	// 4. CUR Datasource Details
 	utils.PrintSubHeader("🗄️ CUR Datasource Details")
 
-	// 4a. Catalog Name
-	catalogName, err := utils.Input("Catalog", "awsdatacatalog", true, true, nil)
-	if err != nil {
-		return err
-	}
-	p.Config.DataSourceCatalog = catalogName
-
-	// 4b. Database
-	curDatabase, err := utils.Input("Database", "cur", true, true, nil)
+	// 4a. Database
+	curDatabase, err := utils.Input("Database", "awsdatacatalog", true, true, nil)
 	if err != nil {
 		return err
 	}
 	p.Config.CURDatabase = curDatabase
+
+	// 4b. Schema
+	curSchema, err := utils.Input("Schema", "cur", true, true, nil)
+	if err != nil {
+		return err
+	}
+	p.Config.CURSchema = curSchema
 
 	// 4c. Table
 	curTable, err := utils.Input("Table", "cur-data", true, true, nil)
@@ -366,8 +366,8 @@ func (p *AWSCURInitPlugin) GenerateConfig() error {
 		Target:       "prod",
 		AWSProfile:   userInput.AWSProfile,
 		DatasourceVars: []config.DatasourceVar{
-			{Key: "cur_database", Value: userInput.DataSourceCatalog},
-			{Key: "cur_schema", Value: userInput.CURDatabase},
+			{Key: "cur_database", Value: userInput.CURDatabase},
+			{Key: "cur_schema", Value: userInput.CURSchema},
 			{Key: "cur_table", Value: userInput.CURTable},
 		},
 		AWSRegion:             userInput.AWSRegion,
@@ -938,8 +938,8 @@ func (p *AWSCURInitPlugin) generateDBTFiles(destPath string, userInput *AWSCURIn
 	projectData := config.DBTProjectTemplate{
 		Profile: "ecos-athena",
 		DatasourceVars: []config.DatasourceVar{
-			{Key: "cur_database", Value: userInput.DataSourceCatalog},
-			{Key: "cur_schema", Value: userInput.CURDatabase},
+			{Key: "cur_database", Value: userInput.CURDatabase},
+			{Key: "cur_schema", Value: userInput.CURSchema},
 			{Key: "cur_table", Value: userInput.CURTable},
 		},
 		IcebergEnabled:        false,

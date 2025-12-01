@@ -3,7 +3,7 @@ package cmd
 import (
 	"testing"
 
-	"github.com/ecos-labs/ecos-core/code/cli/version"
+	"github.com/ecos-labs/ecos/code/cli/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )

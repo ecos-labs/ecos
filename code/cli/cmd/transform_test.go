@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types/mocks"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types/mocks"
 	"go.uber.org/mock/gomock"
 )
 

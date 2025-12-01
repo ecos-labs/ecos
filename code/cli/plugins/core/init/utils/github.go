@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 )
 
 // Constants for GitHub repository owner and name.

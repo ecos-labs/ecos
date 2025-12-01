@@ -3,7 +3,7 @@ package registry
 import (
 	"fmt"
 
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
 )
 
 // InitPluginRegistry holds factory functions for init plugins

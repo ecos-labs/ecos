@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types/mocks"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types/mocks"
 	"github.com/spf13/cobra"
 	"go.uber.org/mock/gomock"
 )

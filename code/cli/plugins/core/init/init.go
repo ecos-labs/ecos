@@ -3,7 +3,7 @@ package init
 import (
 	"fmt"
 
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
 )
 
 // GetInitPlugin creates and returns the appropriate init plugin based on cloud provider

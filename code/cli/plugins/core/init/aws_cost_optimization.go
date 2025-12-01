@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	initUtils "github.com/ecos-labs/ecos-core/code/cli/plugins/core/init/utils"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/registry"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	initUtils "github.com/ecos-labs/ecos/code/cli/plugins/core/init/utils"
+	"github.com/ecos-labs/ecos/code/cli/plugins/registry"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 )
 
 // AWSCostOptimizationInitPlugin handles initialization for AWS Cost Optimization Hub data source

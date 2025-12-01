@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	config "github.com/ecos-labs/ecos-core/code/cli/config"
-	types "github.com/ecos-labs/ecos-core/code/cli/plugins/types"
+	config "github.com/ecos-labs/ecos/code/cli/config"
+	types "github.com/ecos-labs/ecos/code/cli/plugins/types"
 	gomock "go.uber.org/mock/gomock"
 )
 

@@ -1,4 +1,4 @@
-module github.com/ecos-labs/ecos-core/code/cli
+module github.com/ecos-labs/ecos/code/cli
 
 go 1.24
 

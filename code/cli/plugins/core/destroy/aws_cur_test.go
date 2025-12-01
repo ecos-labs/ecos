@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/smithy-go"
-	cliConfig "github.com/ecos-labs/ecos-core/code/cli/config"
+	cliConfig "github.com/ecos-labs/ecos/code/cli/config"
 )
 
 func TestAwsCurDestroyPlugin_Name(t *testing.T) {

@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	ecosconfig "github.com/ecos-labs/ecos-core/code/cli/config"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	ecosconfig "github.com/ecos-labs/ecos/code/cli/config"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 	"github.com/subosito/gotenv"
 )
 

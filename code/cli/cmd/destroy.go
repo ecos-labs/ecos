@@ -9,12 +9,12 @@ import (
 	"github.com/spf13/cobra"
 
 	// Import destroy plugins to trigger plugin self-registration
-	_ "github.com/ecos-labs/ecos-core/code/cli/plugins/core/destroy"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
+	_ "github.com/ecos-labs/ecos/code/cli/plugins/core/destroy"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
 
-	"github.com/ecos-labs/ecos-core/code/cli/config"
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/registry"
-	"github.com/ecos-labs/ecos-core/code/cli/utils"
+	"github.com/ecos-labs/ecos/code/cli/config"
+	"github.com/ecos-labs/ecos/code/cli/plugins/registry"
+	"github.com/ecos-labs/ecos/code/cli/utils"
 )
 
 var destroyCmd = &cobra.Command{

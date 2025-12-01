@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ecos-labs/ecos-core/code/cli/cmd"
+	"github.com/ecos-labs/ecos/code/cli/cmd"
 )
 
 func main() {

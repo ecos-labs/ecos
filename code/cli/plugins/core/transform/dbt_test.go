@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ecos-labs/ecos-core/code/cli/plugins/types"
+	"github.com/ecos-labs/ecos/code/cli/plugins/types"
 )
 
 func TestDBTTransformPlugin_Metadata(t *testing.T) {
